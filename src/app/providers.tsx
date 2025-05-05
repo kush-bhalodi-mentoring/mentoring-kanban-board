@@ -12,7 +12,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: listener } = supabase.auth.onAuthStateChange(
       (event /*, session*/) => {
         if (event === "SIGNED_IN") {
-          router.push("/private");
+          router.push("/team");
         }
         if (event === "SIGNED_OUT") {
           router.push("/login");
