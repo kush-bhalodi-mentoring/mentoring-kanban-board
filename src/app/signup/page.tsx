@@ -8,7 +8,7 @@ export default async function SignupPage() {
   } = await supabase.auth.getUser();
 
   if (user) {
-    redirect("/private");
+    redirect("/team");
   }
 
   return (

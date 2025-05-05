@@ -26,7 +26,7 @@ export default function LoginView() {
       toast.error("Login failed: " + error.message);
     } else {
       toast.success("Check your email to confirm your signup.");
-      router.push("/private");
+      router.push("/team");
     }
 
     setLoading(false);
