@@ -1,21 +1,18 @@
-// app/providers.tsx
 "use client";
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabase/client";
+import { ROUTES } from "@/constants/routes";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange(
-      (event /*, session*/) => {
-        if (event === "SIGNED_IN") {
-          router.push("/private");
-        }
+      (event) => {
         if (event === "SIGNED_OUT") {
-          router.push("/login");
+          router.push(ROUTES.LOGIN);
         }
       }
     );

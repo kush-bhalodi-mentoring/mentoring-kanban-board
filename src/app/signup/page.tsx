@@ -1,6 +1,7 @@
 import { supabase } from "@/utils/supabase/client";
 import SignupView from "@/views/Signup";
 import { redirect } from "next/navigation";
+import { ROUTES } from "@/constants/routes";
 
 export default async function SignupPage() {
   const {
@@ -8,7 +9,7 @@ export default async function SignupPage() {
   } = await supabase.auth.getUser();
 
   if (user) {
-    redirect("/private");
+    redirect(ROUTES.TEAM);
   }
 
   return (

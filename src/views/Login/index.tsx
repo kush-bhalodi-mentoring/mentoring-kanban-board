@@ -6,6 +6,7 @@ import { supabase } from "@/utils/supabase/client";
 import AuthForm from "@/components/AuthForm";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ROUTES } from "@/constants/routes";
 
 export default function LoginView() {
   const router = useRouter();
@@ -26,7 +27,7 @@ export default function LoginView() {
       toast.error("Login failed: " + error.message);
     } else {
       toast.success("Check your email to confirm your signup.");
-      router.push("/private");
+      router.push(ROUTES.TEAM);
     }
 
     setLoading(false);
