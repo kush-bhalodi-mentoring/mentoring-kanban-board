@@ -6,7 +6,7 @@ import JoinTeam from "./JoinTeam";
 
 export default function TeamOnboarding() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-8 bg-gray-50 space-y-8">
+    <div className="flex flex-col items-center justify-top min-h-screen p-8 bg-gray-50 space-y-8">
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold">Team Onboarding</h1>
         <p className="text-muted-foreground">
@@ -14,7 +14,7 @@ export default function TeamOnboarding() {
         </p>
       </div>
 
-      <Tabs defaultValue="create" className="w-full max-w-md">
+      <Tabs defaultValue="create" className="w-full max-w-xl">
         <TabsList className="grid grid-cols-2">
           <TabsTrigger value="create">Create Team</TabsTrigger>
           <TabsTrigger value="join">Join Team</TabsTrigger>

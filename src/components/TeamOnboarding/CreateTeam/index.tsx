@@ -83,7 +83,7 @@ export default function CreateTeam() {
   };
 
   return (
-    <Card className="w-full max-w-md text-left">
+    <Card className="w-full max-w-xl text-left">
       <CardContent className="p-6 space-y-4">
         <h2 className="text-2xl font-bold">Create a Team</h2>
 
