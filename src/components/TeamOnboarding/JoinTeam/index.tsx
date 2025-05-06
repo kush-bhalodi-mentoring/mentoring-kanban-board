@@ -8,12 +8,10 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
+import { TeamsTable as Team } from "@/types/supabaseTableData"
+import { DB_TABLE_NAMES as TABLE } from "@/constants/databaseTableNames";
+import { ROUTES } from "@/constants/routes";
 
-type Team = {
-  id: string
-  name: string
-  description: string
-}
 
 export default function JoinTeamPage() {
   const router = useRouter()
@@ -23,7 +21,7 @@ export default function JoinTeamPage() {
 
   useEffect(() => {
     const fetchTeams = async () => {
-      const { data, error } = await supabase.from("teams").select("*")
+      const { data, error } = await supabase.from(TABLE.TEAMS).select("*")
       if (error) console.error("Error fetching teams:", error)
       else setTeams(data)
     }
@@ -46,14 +44,14 @@ export default function JoinTeamPage() {
       return
     }
 
-    const { error } = await supabase.from("user_team").insert([
+    const { error } = await supabase.from(TABLE.USER_TEAM).insert([
       { user_id: user.id, team_id: selectedTeam },
     ])
 
     if (error) {
       console.error("Error joining team:", error)
     } else {
-      router.push(`/team/${selectedTeam}`)
+      router.push(`${ROUTES.TEAM}/${selectedTeam}`)
     }
 
     setLoading(false)
