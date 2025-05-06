@@ -1,3 +1,4 @@
+// src/app/team/join/page.tsx
 "use client"
 
 import { useEffect, useState } from "react"
