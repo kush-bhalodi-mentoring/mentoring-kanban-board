@@ -14,6 +14,7 @@ export default function TeamOnboarding() {
         </p>
       </div>
 
+
       <Tabs defaultValue="create" className="w-full max-w-xl">
         <TabsList className="grid grid-cols-2">
           <TabsTrigger value="create">Create Team</TabsTrigger>
