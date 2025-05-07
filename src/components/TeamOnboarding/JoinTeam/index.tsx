@@ -32,8 +32,6 @@ export default function JoinTeamPage() {
         return
       }
     
-      const userId = userData.user.id
-    
       // Get team_ids that the user has already joined
       const { data: userTeamData, error: userTeamError } = await supabase
         .from(TABLE.USER_TEAM)
@@ -46,7 +44,6 @@ export default function JoinTeamPage() {
       }
     
       const joinedTeamIds = userTeamData?.map((item) => item.team_id) ?? []
-      console.log("Joined team IDs:", joinedTeamIds)
     
       // Fetch all teams
       const { data: allTeams, error: teamsError } = await supabase
@@ -57,8 +54,6 @@ export default function JoinTeamPage() {
         console.error("Error fetching teams:", teamsError)
         return
       }
-    
-      console.log("All teams:", allTeams)
     
       // Filter out teams already joined
       const availableTeams = allTeams.filter(
