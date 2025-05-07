@@ -21,10 +21,14 @@ import { useState } from "react";
 import { ROUTES } from "@/constants/routes";
 import { DB_TABLE_NAMES } from "@/constants/databaseTableNames";
 import { TeamMemberRoles } from "@/types/supabaseTableData";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const CreateTeamSchema = z.object({
   name: z.string().min(3, "Team name must be at least 3 characters"),
   description: z.string().min(5, "Description must be at least 5 characters"),
+  type: z.enum(["PUBLIC", "PRIVATE"], {
+    errorMap: () => ({ message: "Select a team type" }),
+  }),
 });
 
 type CreateTeamFormData = z.infer<typeof CreateTeamSchema>;
@@ -38,6 +42,7 @@ export default function CreateTeam() {
     defaultValues: {
       name: "",
       description: "",
+      type: "PUBLIC",
     },
   });
 
@@ -56,7 +61,13 @@ export default function CreateTeam() {
 
     const { data: team, error: teamError } = await supabase
       .from(DB_TABLE_NAMES.TEAMS)
-      .insert([{ name: data.name, description: data.description }])
+      .insert([
+        {
+          name: data.name,
+          description: data.description,
+          type: data.type,
+        },
+      ])
       .select("id")
       .single();
 
@@ -114,6 +125,37 @@ export default function CreateTeam() {
                   <FormLabel>Description</FormLabel>
                   <FormControl>
                     <Input placeholder="Short description" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Team Type</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      className="flex flex-col space-y-0"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="PUBLIC" id="public" />
+                        <label htmlFor="public" className="cursor-pointer">
+                          Public
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="PRIVATE" id="private" />
+                        <label htmlFor="private" className="cursor-pointer">
+                          Private
+                        </label>
+                      </div>
+                    </RadioGroup>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
