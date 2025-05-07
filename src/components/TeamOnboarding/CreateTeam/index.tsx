@@ -20,13 +20,13 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { ROUTES } from "@/constants/routes";
 import { DB_TABLE_NAMES } from "@/constants/databaseTableNames";
-import { TeamMemberRoles } from "@/types/supabaseTableData";
+import { TeamMemberRoles, TeamTypes } from "@/types/supabaseTableData";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const CreateTeamSchema = z.object({
   name: z.string().min(3, "Team name must be at least 3 characters"),
   description: z.string().min(5, "Description must be at least 5 characters"),
-  type: z.enum(["PUBLIC", "PRIVATE"], {
+  type: z.nativeEnum(TeamTypes, {
     errorMap: () => ({ message: "Select a team type" }),
   }),
 });
@@ -42,7 +42,7 @@ export default function CreateTeam() {
     defaultValues: {
       name: "",
       description: "",
-      type: "PUBLIC",
+      type: TeamTypes.Public,
     },
   });
 
@@ -143,18 +143,14 @@ export default function CreateTeam() {
                       value={field.value}
                       className="flex flex-col space-y-0"
                     >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="PUBLIC" id="public" />
-                        <label htmlFor="public" className="cursor-pointer">
-                          Public
-                        </label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="PRIVATE" id="private" />
-                        <label htmlFor="private" className="cursor-pointer">
-                          Private
-                        </label>
-                      </div>
+                      {Object.values(TeamTypes).map((value) => (
+                        <div key={value} className="flex items-center space-x-2">
+                          <RadioGroupItem value={value} id={value} />
+                          <label htmlFor={value} className="cursor-pointer">
+                            {value}
+                          </label>
+                        </div>
+                      ))}
                     </RadioGroup>
                   </FormControl>
                   <FormMessage />
