@@ -63,7 +63,6 @@ export default function JoinTeamPage() {
         (team) => !joinedTeamIds.includes(team.id)
       )
     
-      console.log("Available teams:", availableTeams)
     
       setTeams(availableTeams)
     }
