@@ -30,7 +30,6 @@ export default function JoinTeamPage() {
       }
     
       const userId = userData.user.id
-      console.log("Current user ID:", userId)
     
       // Get team_ids that the user has already joined
       const { data: userTeamData, error: userTeamError } = await supabase
