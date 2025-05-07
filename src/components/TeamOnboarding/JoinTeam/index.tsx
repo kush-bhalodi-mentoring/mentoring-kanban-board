@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
-import { TeamsTable as Team } from "@/types/supabaseTableData"
+import { TeamMemberRoles, TeamsTable as Team } from "@/types/supabaseTableData"
 import { DB_TABLE_NAMES as TABLE } from "@/constants/databaseTableNames";
 import { ROUTES } from "@/constants/routes";
 
@@ -45,7 +45,7 @@ export default function JoinTeamPage() {
     }
 
     const { error } = await supabase.from(TABLE.USER_TEAM).insert([
-      { user_id: user.id, team_id: selectedTeam },
+      { user_id: user.id, team_id: selectedTeam, role: TeamMemberRoles.USER },
     ])
 
     if (error) {

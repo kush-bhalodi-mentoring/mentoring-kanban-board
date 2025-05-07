@@ -42,7 +42,7 @@ export default function CreateTeam() {
     defaultValues: {
       name: "",
       description: "",
-      type: TeamTypes.Public,
+      type: TeamTypes.PUBLIC,
     },
   });
 
