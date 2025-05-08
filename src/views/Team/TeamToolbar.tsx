@@ -102,10 +102,38 @@ export default function TeamToolbar({ teamId }: Props) {
 
   if (!isAdmin) return null
 
+  const toggleEditTeamDialog = () => {
+    setEditTeamOpen(true)
+  }
+  
+  const toggleEditMembersDialog = async () => {
+    const { data, error } = await supabase
+      .from("team_members_with_email")
+      .select("*")
+      .eq("team_id", teamId)
+  
+    if (error) {
+      toast.error("Failed to fetch members")
+      return
+    }
+  
+    if (data) {
+        setMembers(
+            (data as { user_id: string; email: string }[]).map((entry) => ({
+              id: entry.user_id,
+              email: entry.email,
+            }))
+          )
+      setEditMembersOpen(true)
+    }
+  }
+
+  
+
   return (
     <div className="flex space-x-4 mb-6">
-      <Button onClick={() => setEditTeamOpen(true)}>Edit Team Configuration</Button>
-      <Button onClick={openMembersModal}>Edit Team Members</Button>
+      <Button onClick={toggleEditTeamDialog}>Edit Team Configuration</Button>
+      <Button onClick={toggleEditMembersDialog}>Edit Team Members</Button>
 
       {/* Edit Team Modal */}
       <Dialog open={editTeamOpen} onOpenChange={setEditTeamOpen}>
