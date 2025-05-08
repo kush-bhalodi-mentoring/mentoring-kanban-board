@@ -1,4 +1,6 @@
+
 // src/app/team/join/page.tsx
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -30,41 +32,14 @@ export default function JoinTeamPage() {
         return
       }
     
-      const userId = userData.user.id
-      console.log("Current user ID:", userId)
+      // Querying with raw SQL using 'rpc()'
+      const { data: availableTeams, error: teamError } = await supabase
+        .rpc('get_teams_not_joined', { uuser_id: userData.user.id })
     
-      // Get team_ids that the user has already joined
-      const { data: userTeamData, error: userTeamError } = await supabase
-        .from(TABLE.USER_TEAM)
-        .select("team_id")
-        .eq("user_id", userData.user.id)
-    
-      if (userTeamError) {
-        console.error("Error fetching user_team:", userTeamError)
+      if (teamError) {
+        console.error("Error fetching teams:", teamError)
         return
       }
-    
-      const joinedTeamIds = userTeamData?.map((item) => item.team_id) ?? []
-      console.log("Joined team IDs:", joinedTeamIds)
-    
-      // Fetch all teams
-      const { data: allTeams, error: teamsError } = await supabase
-        .from(TABLE.TEAMS)
-        .select("*")
-    
-      if (teamsError) {
-        console.error("Error fetching teams:", teamsError)
-        return
-      }
-    
-      console.log("All teams:", allTeams)
-    
-      // Filter out teams already joined
-      const availableTeams = allTeams.filter(
-        (team) => !joinedTeamIds.includes(team.id)
-      )
-    
-      console.log("Available teams:", availableTeams)
     
       setTeams(availableTeams)
     }
