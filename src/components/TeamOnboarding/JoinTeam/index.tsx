@@ -1,4 +1,6 @@
+
 // src/app/team/join/page.tsx
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -12,7 +14,6 @@ import { TeamsTable as Team } from "@/types/supabaseTableData"
 import { DB_TABLE_NAMES as TABLE } from "@/constants/databaseTableNames";
 import { ROUTES } from "@/constants/routes";
 
-
 export default function JoinTeamPage() {
   const router = useRouter()
   const [teams, setTeams] = useState<Team[]>([])
@@ -21,9 +22,26 @@ export default function JoinTeamPage() {
 
   useEffect(() => {
     const fetchTeams = async () => {
-      const { data, error } = await supabase.from(TABLE.TEAMS).select("*")
-      if (error) console.error("Error fetching teams:", error)
-      else setTeams(data)
+      const {
+        data: userData,
+        error: userError,
+      } = await supabase.auth.getUser()
+    
+      if (userError || !userData?.user) {
+        console.error("No logged-in user found.", userError)
+        return
+      }
+    
+      // Querying with raw SQL using 'rpc()'
+      const { data: availableTeams, error: teamError } = await supabase
+        .rpc('get_teams_not_joined', { uuser_id: userData.user.id })
+    
+      if (teamError) {
+        console.error("Error fetching teams:", teamError)
+        return
+      }
+    
+      setTeams(availableTeams)
     }
 
     fetchTeams()
@@ -61,28 +79,33 @@ export default function JoinTeamPage() {
     <Card className="max-w-xl mx-auto mt-12 p-6 shadow-xl">
       <CardContent className="space-y-4">
         <h2 className="text-2xl font-bold mb-4">Join a Team</h2>
-        <RadioGroup onValueChange={setSelectedTeam}>
-          {teams.map((team) => (
-            <div key={team.id} className="flex items-start space-x-2">
-              <RadioGroupItem value={team.id} id={team.id} />
-              <div>
-                <Label htmlFor={team.id} className="font-medium">
-                  {team.name}
-                </Label>
-                <p className="text-sm text-gray-600">{team.description}</p>
-              </div>
-            </div>
-          ))}
-        </RadioGroup>
-        <Button
-          onClick={handleJoinTeam}
-          disabled={!selectedTeam || loading}
-          className="mt-4"
-        >
-          {loading ? "Joining..." : "Join Team"}
-        </Button>
+        {teams.length > 0 ? (
+          <>
+            <RadioGroup onValueChange={setSelectedTeam}>
+              {teams.map((team) => (
+                <div key={team.id} className="flex items-start space-x-2">
+                  <RadioGroupItem value={team.id} id={team.id} />
+                  <div>
+                    <Label htmlFor={team.id} className="font-medium">
+                      {team.name}
+                    </Label>
+                    <p className="text-sm text-gray-600">{team.description}</p>
+                  </div>
+                </div>
+              ))}
+            </RadioGroup>
+            <Button
+              onClick={handleJoinTeam}
+              disabled={!selectedTeam || loading}
+              className="mt-4"
+            >
+              {loading ? "Joining..." : "Join Team"}
+            </Button>
+          </>
+        ) : (
+          <p className="text-muted-foreground">No teams available to join.</p>
+        )}
       </CardContent>
     </Card>
   )
 }
-
