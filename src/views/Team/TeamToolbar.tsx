@@ -6,7 +6,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { supabase } from "@/utils/supabase/client"
-import { useParams } from "next/navigation"
 import { toast } from "sonner"
 import { DB_TABLE_NAMES as TABLE } from "@/constants/databaseTableNames"
 
@@ -72,15 +71,17 @@ export default function TeamToolbar({ teamId }: Props) {
       .select("*")
       .eq("team_id", teamId)
 
-  if(error){
-    console.error(error)
-  }
+    if(error){
+      console.error(error)
+    }
 
     if (data) {
-      setMembers(data.map((entry: any) => ({
-        id: entry.user_id,
-        email: entry.email,
-      })))
+        setMembers(
+            (data as { user_id: string; email: string }[]).map((entry) => ({
+              id: entry.user_id,
+              email: entry.email,
+            }))
+          )
       setEditMembersOpen(true)
     }
   }
