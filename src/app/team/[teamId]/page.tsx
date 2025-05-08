@@ -1,6 +1,17 @@
-//src/app/team/[teamId]/page.tsx
+// src/app/team/[teamId]/page.tsx
+
 import TeamView from "@/views/Team/TeamView"
 
-export default function TeamPage({ params }: { params: { teamId: string } }) {
-  return <TeamView teamId={params.teamId} />
-}
+type PageProps = {
+    params: { teamId: string };
+  };
+  
+  export default async function TeamPage(props: Promise<PageProps>) {
+    const {
+      params: { teamId },
+    } = await props;
+  
+    return <TeamView teamId={teamId} />;
+  }
+
+
