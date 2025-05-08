@@ -1,13 +1,26 @@
 export enum TeamMemberRoles {
-    ADMIN = 'Admin',
-    USER = 'User',
-  }
+  ADMIN = 'Admin',
+  USER = 'User',
+}
   
-  export interface TeamsTable {
-    id: string;
-    name: string;
-    description?: string;
-    created_at: string;
-    updated_at: string;
-  }
-  
+export enum TeamTypes {
+  PUBLIC = 'Public',
+  PRIVATE = 'Private',
+}
+
+export interface TeamsTable {
+  id: string;
+  name: string;
+  description?: string;
+  type: TeamTypes;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserTeamTable {
+  id: string;
+  user_id: string;
+  team_id: string;
+  role: TeamMemberRoles;
+  created_at: string;
+}
