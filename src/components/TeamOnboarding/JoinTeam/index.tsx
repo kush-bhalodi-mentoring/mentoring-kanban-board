@@ -32,34 +32,14 @@ export default function JoinTeamPage() {
         return
       }
     
-      // Get team_ids that the user has already joined
-      const { data: userTeamData, error: userTeamError } = await supabase
-        .from(TABLE.USER_TEAM)
-        .select("team_id")
-        .eq("user_id", userData.user.id)
+      // Querying with raw SQL using 'rpc()'
+      const { data: availableTeams, error: teamError } = await supabase
+        .rpc('get_teams_not_joined', { uuser_id: userData.user.id })
     
-      if (userTeamError) {
-        console.error("Error fetching user_team:", userTeamError)
+      if (teamError) {
+        console.error("Error fetching teams:", teamError)
         return
       }
-    
-      const joinedTeamIds = userTeamData?.map((item) => item.team_id) ?? []
-    
-      // Fetch all teams
-      const { data: allTeams, error: teamsError } = await supabase
-        .from(TABLE.TEAMS)
-        .select("*")
-    
-      if (teamsError) {
-        console.error("Error fetching teams:", teamsError)
-        return
-      }
-    
-      // Filter out teams already joined
-      const availableTeams = allTeams.filter(
-        (team) => !joinedTeamIds.includes(team.id)
-      )
-    
     
       setTeams(availableTeams)
     }
