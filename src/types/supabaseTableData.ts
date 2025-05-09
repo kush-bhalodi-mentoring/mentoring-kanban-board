@@ -24,3 +24,13 @@ export interface UserTeamTable {
   role: TeamMemberRoles;
   created_at: string;
 }
+
+export interface Boards {
+  id: string;
+  name: string;
+  description: string;
+  team_id: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}

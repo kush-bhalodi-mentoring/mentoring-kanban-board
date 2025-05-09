@@ -13,15 +13,13 @@ export default async function TeamPage() {
 
   const userId = data.user.id;
 
-  const { data: userTeam, error: teamError } = await supabase
+  const { data: userTeams, error: teamError } = await supabase
     .from(DB_TABLE_NAMES.USER_TEAM)
     .select("team_id")
-    .eq("user_id", userId)
-    .single();
+    .eq("user_id", userId);
 
-  if (teamError || !userTeam) {
+  if (teamError || !userTeams || userTeams.length === 0) {
     redirect(ROUTES.TEAM_JOIN);
   }
-
-  redirect(ROUTES.TEAM_ID(userTeam.team_id));
+  redirect(ROUTES.TEAM_ID(userTeams[0].team_id));
 }
