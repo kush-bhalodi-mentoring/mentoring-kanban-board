@@ -47,8 +47,9 @@ export default function InviteUserDialog() {
   const onSubmit = async (data: InviteFormValues) => {
     const { email } = data;
 
+    // Querying users_with_email view now
     const { data: user, error: userError } = await supabase
-      .from("auth.users")
+      .from("users_with_email")
       .select("id")
       .eq("email", email)
       .single();
