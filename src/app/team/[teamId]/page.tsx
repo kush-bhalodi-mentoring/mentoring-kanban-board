@@ -3,16 +3,14 @@
 import TeamView from "@/views/Team/TeamView";
 import { JSX } from "react";
 
-type PageProps = {
-  params: { teamId: string };
-};
+ type PageProps = {
+     params: Promise<{ teamId: string }>;
+ };
 
 export default async function TeamPage(props: PageProps): Promise<JSX.Element> {
-  const {
-    params: { teamId },
-  } = props;
+   const pageParams = await props.params
 
-  return <TeamView teamId={teamId} />;
+  return <TeamView teamId={pageParams.teamId} />;
 }
 
 
