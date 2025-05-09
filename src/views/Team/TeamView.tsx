@@ -43,11 +43,16 @@ export default function TeamView({ teamId }: TeamViewProps) {
   if (!team) return <div className="p-6">Team not found.</div>
 
   return (
-    <div className="p-6">
-      <TeamToolbar teamId={teamId} />
-      <h1 className="text-3xl font-bold">{team.name}</h1>
-      <p className="text-gray-600">{team.description}</p>
-      {/* Add more atomic components here */}
+    <div className="bg-secondary text-secondary-foreground p-6 rounded-b-xl shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">ToolbarTest2</h1>
+          <p className="text-sm opacity-80">Testing Admin Toolbar</p>
+        </div>
+        <div className="flex gap-3">
+          <TeamToolbar teamId={teamId} />
+        </div>
+      </div>
     </div>
   )
 }

@@ -90,8 +90,8 @@ export default function TeamToolbar({ teamId }: TeamToolbarProps) {
 
   return (
     <div className="flex space-x-4 mb-6">
-      <Button onClick={toggleEditTeamDialog}>Edit Team Configuration</Button>
-      <Button onClick={toggleEditMembersDialog}>Edit Team Members</Button>
+      <Button variant='outline' className="text-gray-500" onClick={toggleEditTeamDialog}>Edit Team Configuration</Button>
+      <Button variant='outline' className="text-gray-500" onClick={toggleEditMembersDialog}>Edit Team Members</Button>
 
       {/* Edit Team Modal */}
 <EditTeamDialog
