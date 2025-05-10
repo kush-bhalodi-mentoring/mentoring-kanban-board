@@ -34,9 +34,10 @@ export default function EditTeamMembersDialog({
         .from("team_members_with_email")
         .select("*")
         .eq("team_id", teamId)
+        .eq("role", "User")
 
       if (error) {
-        toast.error("Failed to fetch members")
+        toast.error("Failed to fetch users")
         return
       }
 
