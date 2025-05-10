@@ -14,6 +14,7 @@ import { TeamMemberRoles, TeamsTable as Team } from "@/types/supabaseTableData"
 import { DB_TABLE_NAMES as TABLE } from "@/constants/databaseTableNames";
 import { ROUTES } from "@/constants/routes";
 
+
 export default function JoinTeamPage() {
   const router = useRouter()
   const [teams, setTeams] = useState<Team[]>([])
