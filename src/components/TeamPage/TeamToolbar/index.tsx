@@ -50,20 +50,6 @@ export default function TeamToolbar({
     }
   }, [teamId])
 
-  // Fetch team info (optional if you already have it as props)
-  const fetchTeamInfo = useCallback(async () => {
-    const { data } = await supabase
-      .from(TABLE.TEAMS)
-      .select("name, description")
-      .eq("id", teamId)
-      .single()
-
-    if (data) {
-      setTeamName(data.name)
-      setTeamDesc(data.description)
-    }
-  }, [teamId])
-
   // Fetch members
   const fetchTeamMembers = useCallback(async () => {
     const { data } = await supabase

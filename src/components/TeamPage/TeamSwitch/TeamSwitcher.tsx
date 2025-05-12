@@ -18,6 +18,9 @@ type Team = {
   id: string
   name: string
 }
+type TeamMemberRecord = {
+  team_id: string
+}
 
 export function TeamSwitcher({ currentTeamId }: { currentTeamId: string }) {
   const [teams, setTeams] = useState<Team[]>([])
@@ -26,38 +29,44 @@ export function TeamSwitcher({ currentTeamId }: { currentTeamId: string }) {
 
   useEffect(() => {
     const fetchTeams = async () => {
-      const { data: userData } = await supabase.auth.getUser()
-      if (!userData?.user) return
+    const { data: userData } = await supabase.auth.getUser()
+    if (!userData?.user) return
 
-      const { data: memberData, error: memberError } = await supabase
+    const { data: memberData, error: memberError } = await supabase
         .from("team_members_with_email")
         .select("team_id")
         .eq("user_id", userData.user.id)
 
-      if (memberError) return console.error("Failed to fetch team memberships", memberError)
+    if (memberError) {
+        console.error("Failed to fetch team memberships", memberError)
+        return
+    }
 
-      const teamIds = (memberData ?? []).map((m: any) => m.team_id)
+    const teamIds = (memberData ?? []).map((m: TeamMemberRecord) => m.team_id)
 
-      if (teamIds.length === 0) {
+    if (teamIds.length === 0) {
         return [] // User has joined no teams
-      }
+    }
 
-      const { data: teamData, error: teamError } = await supabase
-      .from(TABLE.TEAMS)
-      .select("id, name")
-      .in("id", teamIds)
+    const { data: teamData, error: teamError } = await supabase
+        .from(TABLE.TEAMS)
+        .select("id, name")
+        .in("id", teamIds)
 
-      if (teamError) return console.error("Failed to fetch teams", teamError)
+    if (teamError) {
+        console.error("Failed to fetch teams", teamError)
+        return
+    }
 
-      const teamList = (teamData ?? []).map((t: any) => ({
+    const teamList = (teamData ?? []).map((t: Team) => ({
         id: t.id,
         name: t.name,
-      }))
+    }))
 
-      setTeams(teamList)
+    setTeams(teamList)
 
-      const current = teamList.find((t) => t.id === currentTeamId)
-      if (current) setCurrentName(current.name)
+    const current = teamList.find((t) => t.id === currentTeamId)
+    if (current) setCurrentName(current.name)
     }
 
     fetchTeams()

@@ -62,7 +62,7 @@ export default function EditTeamMembersDialog({
       .eq("user_id", userId)
       .eq("team_id", teamId)
 
-      console.log(teamId)
+      console.log(teamId, userId)
 
     setLoading(false)
 
