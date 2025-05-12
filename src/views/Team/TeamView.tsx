@@ -1,9 +1,11 @@
+// src/views/Team/TeamView.tsx
 "use client"
 
 import { useEffect, useState } from "react"
 import { supabase } from "@/utils/supabase/client"
 import { DB_TABLE_NAMES as TABLE } from "@/constants/databaseTableNames"
 import TeamToolbar from '@/components/TeamPage/TeamToolbar'
+import { TeamSwitcher } from "@/components/TeamPage/TeamSwitch/TeamSwitcher"
 
 type TeamViewProps = {
   teamId: string
@@ -43,17 +45,24 @@ export default function TeamView({ teamId }: TeamViewProps) {
   if (!team) return <div className="p-6">Team not found.</div>
 
   return (
-    <div className="bg-secondary text-secondary-foreground p-6 rounded-b-xl shadow-sm">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold mt-4">{team.name}</h1>
-          <p className="text-gray-600">{team.description}</p>
-
-        </div>
-        <div className="flex gap-3">
-          <TeamToolbar teamId={teamId} />
-        </div>
+    <div className="flex justify-between items-center bg-secondary text-secondary-foreground py-1 px-4 border-b w-full">
+      {/* Left section: Name + Description */}
+      <div className="flex flex-col w-1/2 py-1">
+        <h1 className="text-xl font-semibold text-foreground">{team.name}</h1>
+        <p className="text-sm text-muted-foreground">{team.description}</p>
       </div>
+      <div className="flex items-end space-x-2 py-1"> 
+        <TeamSwitcher currentTeamId={teamId} />
+        <TeamToolbar
+          teamId={teamId}
+          initialName={team.name}
+          initialDescription={team.description}
+          onTeamUpdate={(newName, newDescription) =>
+            setTeam((prev) => prev && { ...prev, name: newName, description: newDescription })
+          }
+        />
+      </div>
+      
     </div>
   )
 }

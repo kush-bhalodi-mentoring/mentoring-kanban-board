@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { supabase } from "@/utils/supabase/client"
 import { DB_TABLE_NAMES as TABLE } from "@/constants/databaseTableNames"
@@ -9,6 +10,9 @@ import EditTeamMembersDialog from "@/components/TeamPage/Dialogs/EditTeamMembers
 
 type TeamToolbarProps = {
   teamId: string
+  initialName: string
+  initialDescription: string
+  onTeamUpdate?: (newName: string, newDescription: string) => void
 }
 
 type Member = {
@@ -16,15 +20,20 @@ type Member = {
   email: string
 }
 
-export default function TeamToolbar({ teamId }: TeamToolbarProps) {
+export default function TeamToolbar({
+  teamId,
+  initialName,
+  initialDescription,
+  onTeamUpdate,
+}: TeamToolbarProps) {
   const [isAdmin, setIsAdmin] = useState(false)
   const [editTeamOpen, setEditTeamOpen] = useState(false)
   const [editMembersOpen, setEditMembersOpen] = useState(false)
-  const [teamName, setTeamName] = useState("")
-  const [teamDesc, setTeamDesc] = useState("")
+  const [teamName, setTeamName] = useState(initialName)
+  const [teamDesc, setTeamDesc] = useState(initialDescription)
   const [, setMembers] = useState<Member[]>([])
 
-  // Fetch user role (Admin check)
+  // Admin check
   const checkAdminStatus = useCallback(async () => {
     const { data: userData } = await supabase.auth.getUser()
     if (!userData?.user) return
@@ -41,7 +50,7 @@ export default function TeamToolbar({ teamId }: TeamToolbarProps) {
     }
   }, [teamId])
 
-  // Fetch team details
+  // Fetch team info (optional if you already have it as props)
   const fetchTeamInfo = useCallback(async () => {
     const { data } = await supabase
       .from(TABLE.TEAMS)
@@ -55,7 +64,7 @@ export default function TeamToolbar({ teamId }: TeamToolbarProps) {
     }
   }, [teamId])
 
-  // Fetch team members (wrapped in useCallback)
+  // Fetch members
   const fetchTeamMembers = useCallback(async () => {
     const { data } = await supabase
       .from("team_members_with_email")
@@ -74,9 +83,8 @@ export default function TeamToolbar({ teamId }: TeamToolbarProps) {
 
   useEffect(() => {
     checkAdminStatus()
-    fetchTeamInfo()
-    fetchTeamMembers() // For members when toolbar is loaded
-  }, [checkAdminStatus, fetchTeamInfo, fetchTeamMembers, teamId])
+    fetchTeamMembers()
+  }, [checkAdminStatus, fetchTeamMembers])
 
   const toggleEditTeamDialog = () => {
     setEditTeamOpen((prev) => !prev)
@@ -86,32 +94,48 @@ export default function TeamToolbar({ teamId }: TeamToolbarProps) {
     setEditMembersOpen((prev) => !prev)
   }
 
+  const handleTeamUpdate = (newName: string, newDescription: string) => {
+    setTeamName(newName)
+    setTeamDesc(newDescription)
+    onTeamUpdate?.(newName, newDescription)
+  }
+
   if (!isAdmin) return null
 
   return (
-    <div className="flex space-x-4 mb-6">
-      <Button variant='outline' className="text-gray-500" onClick={toggleEditTeamDialog}>Edit Team Configuration</Button>
-      <Button variant='outline' className="text-gray-500" onClick={toggleEditMembersDialog}>Edit Team Members</Button>
+    <>
+      <Button
+        variant="ghost"
+        className="py-[2px] px-[4px] text-sm font-semibold text-muted-foreground flex items-center"
+        onClick={toggleEditTeamDialog}
+      >
+        <Settings className="w-4 h-4" />
+        Team Configuration
+      </Button>
 
-      {/* Edit Team Modal */}
-<EditTeamDialog
-  teamId={teamId}
-  open={editTeamOpen}
-  onOpenChange={setEditTeamOpen}
-  initialName={teamName}
-  initialDescription={teamDesc}
-  onSuccess={(name, desc) => {
-    setTeamName(name)
-    setTeamDesc(desc)
-  }}
-/>
+      <Button
+        variant="ghost"
+        className="py-[2px] px-[4px] text-sm font-semibold text-muted-foreground flex items-center"
+        onClick={toggleEditMembersDialog}
+      >
+        <Settings className="w-4 h-4" />
+        Team Members
+      </Button>
 
-{/* Edit Members Modal */}
-<EditTeamMembersDialog
-  teamId={teamId}
-  open={editMembersOpen}
-  onOpenChange={setEditMembersOpen}
-/>
-    </div>
+      <EditTeamDialog
+        teamId={teamId}
+        open={editTeamOpen}
+        onOpenChange={setEditTeamOpen}
+        initialName={teamName}
+        initialDescription={teamDesc}
+        onSuccess={handleTeamUpdate}
+      />
+
+      <EditTeamMembersDialog
+        teamId={teamId}
+        open={editMembersOpen}
+        onOpenChange={setEditMembersOpen}
+      />
+    </>
   )
 }
