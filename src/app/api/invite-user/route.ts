@@ -7,9 +7,7 @@ export async function POST(request: Request) {
     const { email, teamId } = await request.json()
 
     const { data: users, error: userFetchError } = await supabaseAdmin
-      .from("auth.users")
-      .select("id")
-      .eq("email", email);
+      .rpc("get_user_id_by_email",{email});
 
     let userId: string;
 
@@ -21,7 +19,8 @@ export async function POST(request: Request) {
     if (users && users.length > 0) {
       userId = users[0].id
     } else {
-      const { data: invitedUser, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email)
+      const { data: invitedUser, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email,
+        {redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/set-password?teamId=${teamId}`})
 
       if (inviteError) {
         console.error("Error inviting user:", inviteError)
@@ -54,7 +53,6 @@ export async function POST(request: Request) {
       team_id: teamId,
       role: TeamMemberRoles.USER,
       status: TeamMemberStatus.AWAITING,
-      created_at: new Date().toISOString(),
     })
 
     if (insertError) {

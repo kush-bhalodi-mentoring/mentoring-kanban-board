@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
+import { ROUTES } from "@/constants/routes";
 
 type Cookie = {
   name: string
@@ -29,10 +30,10 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const publicPaths = ['/', '/login', '/signup']
+  const publicPaths = ['/', '/login', '/signup', '/set-password']
   if (!user && !publicPaths.includes(request.nextUrl.pathname)) {
     const url = request.nextUrl.clone()
-    url.pathname = '/login'
+    url.pathname = ROUTES.LOGIN
     return NextResponse.redirect(url)
   }
 

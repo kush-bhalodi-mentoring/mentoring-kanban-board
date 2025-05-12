@@ -2,14 +2,14 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/utils/supabase/client";
-import { ROUTES } from "@/constants/routes";
+//import { supabase } from "@/utils/supabase/client";
+//import { ROUTES } from "@/constants/routes";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange(
+    /*const { data: listener } = supabase.auth.onAuthStateChange(
       (event) => {
         if (event === "SIGNED_OUT") {
           router.push(ROUTES.LOGIN);
@@ -17,7 +17,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    return () => listener.subscription.unsubscribe();
+    return () => listener.subscription.unsubscribe();*/
   }, [router]);
 
   return <>{children}</>;
