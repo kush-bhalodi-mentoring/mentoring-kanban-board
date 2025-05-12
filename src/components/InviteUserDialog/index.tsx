@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { useParams } from "next/navigation";
-import { supabase } from "@/utils/supabase/client";
 
 const inviteSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -45,39 +44,29 @@ export default function InviteUserDialog() {
   });
 
   const onSubmit = async (data: InviteFormValues) => {
-    const { email } = data;
-
-    // Querying users_with_email view now
-    const { data: user, error: userError } = await supabase
-      .from("users_with_email")
-      .select("id")
-      .eq("email", email)
-      .single();
-
-    if (userError || !user) {
-      toast.error("User not found in the database.");
-      return;
+    const { email } = data
+  
+    try {
+      const res = await fetch("/api/invite-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, teamId }),
+      })
+  
+      const result = await res.json()
+  
+      if (res.ok) {
+        toast.success(result.message || "Invitation sent successfully!")
+        form.reset()
+        setOpen(false)
+      } else {
+        toast.error(result.error || "Failed to invite user.")
+      }
+    } catch (error) {
+      console.error("Unexpected error:", error)
+      toast.error("Something went wrong while sending the invite.")
     }
-
-    const inviteLink = `${window.location.origin}/api/accept-invite?teamId=${teamId}&userId=${user.id}`;
-
-    const { error: emailError } = await supabase.functions.invoke("send-invite-email", {
-      body: {
-        email,
-        link: inviteLink,
-        teamId,
-      },
-    });
-
-    if (emailError) {
-      toast.error("Failed to send invitation email.");
-      return;
-    }
-
-    toast.success("Invitation sent successfully!");
-    form.reset();
-    setOpen(false);
-  };
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

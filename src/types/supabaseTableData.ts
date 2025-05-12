@@ -2,7 +2,13 @@ export enum TeamMemberRoles {
   ADMIN = 'Admin',
   USER = 'User',
 }
-  
+
+export enum TeamMemberStatus {
+  ACTIVE = 'ACTIVE',
+  AWAITING = 'AWAITING',
+  DEACTIVATED = 'DEACTIVATED',
+}
+
 export enum TeamTypes {
   PUBLIC = 'Public',
   PRIVATE = 'Private',
