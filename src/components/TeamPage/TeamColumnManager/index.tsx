@@ -78,7 +78,7 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
           {columns.map((column) => (
             <div
               key={column.id}
-              className="bg-white shadow rounded-lg p-4 flex flex-col min-h-[120px] w-[250px] mb-2.5"
+              className="w-[300px] min-h-screen bg-white rounded shadow p-4"
             >
               <h3 className="text-sm font-semibold mb-2">{column.name}</h3>
               <div className="flex-1 text-xs text-muted-foreground italic">

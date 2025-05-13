@@ -1,5 +1,20 @@
 "use client"
 
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core"
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -7,7 +22,8 @@ import { toast } from "sonner"
 import { v4 as uuidv4 } from "uuid"
 import { useEffect, useState } from "react"
 import { supabase } from "@/utils/supabase/client"
-import { X } from "lucide-react"
+import { X, GripVertical } from "lucide-react"
+import { DB_TABLE_NAMES as TABLE } from "@/constants/databaseTableNames"
 
 type Column = {
   id: string
@@ -24,42 +40,97 @@ type Props = {
   onSuccess: () => void
 }
 
+// Sortable column with drag handle
+function SortableItem({
+  column,
+  index,
+  handleChange,
+  handleRemove,
+}: {
+  column: Column
+  index: number
+  handleChange: (index: number, value: string) => void
+  handleRemove: (index: number) => void
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id: column.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-2 bg-muted p-2 rounded"
+    >
+      {/* Drag handle */}
+      <button
+        ref={setActivatorNodeRef}
+        {...attributes}
+        {...listeners}
+        className="cursor-grab"
+      >
+        <GripVertical className="w-4 h-4 text-muted-foreground" />
+      </button>
+
+      {/* Column input */}
+      <Input
+        placeholder={`Column ${index + 1}`}
+        value={column.name}
+        onChange={(e) => handleChange(index, e.target.value)}
+      />
+
+      <span className="text-muted-foreground text-sm">#{index + 1}</span>
+
+      <Button variant="ghost" size="icon" onClick={() => handleRemove(index)}>
+        <X className="w-4 h-4 text-destructive" />
+      </Button>
+    </div>
+  )
+}
+
 export default function ColumnManagerDialog({ boardId, open, onOpenChange, onSuccess }: Props) {
   const [columns, setColumns] = useState<Column[]>([])
   const [columnsToDelete, setColumnsToDelete] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
 
-  // Load existing columns on open
+  const DEFAULT_COLUMNS = [
+    { id: uuidv4(), name: "To Do", position: 0, boardId },
+    { id: uuidv4(), name: "In Progress", position: 1, boardId },
+    { id: uuidv4(), name: "Done", position: 2, boardId },
+  ]
+
+  const sensors = useSensors(useSensor(PointerSensor))
+
   useEffect(() => {
-    const fetch = async () => {
-      const { data, error } = await supabase
-        .from("columns")
+    const fetchColumns = async () => {
+      const { data } = await supabase
+        .from(TABLE.COLUMNS)
         .select("*")
         .eq("board_id", boardId)
         .order("position", { ascending: true })
 
-      if (error) {
-        console.error("Fetch error:", error)
-        toast.error("Failed to fetch columns")
-        return
+      if (data && data.length > 0) {
+        setColumns(data)
+      } else {
+        setColumns(DEFAULT_COLUMNS)
       }
-
-      setColumns((data ?? []).map(col => ({
-        id: col.id,
-        name: col.name,
-        boardId: col.board_id,
-        position: col.position,
-      })))
     }
 
-    if (open) {
-      fetch()
-      setColumnsToDelete([])
-    }
+    if (open) fetchColumns()
   }, [open, boardId])
 
   const handleAdd = () => {
-    setColumns(prev => [
+    setColumns((prev) => [
       ...prev,
       {
         id: uuidv4(),
@@ -79,29 +150,37 @@ export default function ColumnManagerDialog({ boardId, open, onOpenChange, onSuc
 
   const handleRemove = (index: number) => {
     const removed = columns[index]
-    setColumns(prev => prev.filter((_, i) => i !== index))
+    setColumns((prev) => prev.filter((_, i) => i !== index))
     if (!removed.isNew) {
-      setColumnsToDelete(prev => [...prev, removed.id])
+      setColumnsToDelete((prev) => [...prev, removed.id])
     }
+  }
+
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const oldIndex = columns.findIndex((col) => col.id === active.id)
+    const newIndex = columns.findIndex((col) => col.id === over.id)
+
+    setColumns((prev) => arrayMove(prev, oldIndex, newIndex))
   }
 
   const handleSave = async () => {
     setLoading(true)
 
-    const cleaned = columns.filter(col => col.name.trim() !== "")
+    const cleaned = columns.filter((col) => col.name.trim() !== "")
 
-    // Ensure proper ordering
     const ordered = cleaned.map((col, index) => ({
       ...col,
       position: index + 1,
     }))
 
-    const newCols = ordered.filter(col => col.isNew)
-    const existingCols = ordered.filter(col => !col.isNew)
+    const newCols = ordered.filter((col) => col.isNew)
+    const existingCols = ordered.filter((col) => !col.isNew)
 
-    // INSERT new columns
     if (newCols.length > 0) {
-      const insertData = newCols.map(col => ({
+      const insertData = newCols.map((col) => ({
         id: col.id || uuidv4(),
         name: col.name,
         board_id: boardId,
@@ -109,7 +188,6 @@ export default function ColumnManagerDialog({ boardId, open, onOpenChange, onSuc
       }))
 
       const { error: insertError } = await supabase.from("columns").insert(insertData)
-
       if (insertError) {
         toast.error("Failed to insert new columns")
         console.error(insertError)
@@ -118,7 +196,6 @@ export default function ColumnManagerDialog({ boardId, open, onOpenChange, onSuc
       }
     }
 
-    // UPDATE existing columns
     for (const col of existingCols) {
       const { error: updateError } = await supabase
         .from("columns")
@@ -133,7 +210,6 @@ export default function ColumnManagerDialog({ boardId, open, onOpenChange, onSuc
       }
     }
 
-    // DELETE removed columns
     if (columnsToDelete.length > 0) {
       const { error: deleteError } = await supabase
         .from("columns")
@@ -161,20 +237,22 @@ export default function ColumnManagerDialog({ boardId, open, onOpenChange, onSuc
           <DialogTitle>Manage Columns</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 max-h-[70vh] overflow-y-auto">
-          {columns.map((col, i) => (
-            <div key={col.id} className="flex items-center gap-2">
-              <Input
-                placeholder={`Column ${i + 1}`}
-                value={col.name}
-                onChange={(e) => handleChange(i, e.target.value)}
-              />
-              <span className="text-muted-foreground text-sm">#{i + 1}</span>
-              <Button variant="ghost" size="icon" onClick={() => handleRemove(i)}>
-                <X className="w-4 h-4 text-destructive" />
-              </Button>
-            </div>
-          ))}
-          <Button onClick={handleAdd} variant="outline" size="sm">+ Add Column</Button>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={columns.map((col) => col.id)} strategy={verticalListSortingStrategy}>
+              {columns.map((col, i) => (
+                <SortableItem
+                  key={col.id}
+                  column={col}
+                  index={i}
+                  handleChange={handleChange}
+                  handleRemove={handleRemove}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
+          <Button onClick={handleAdd} variant="outline" size="sm">
+            + Add Column
+          </Button>
         </div>
         <Button onClick={handleSave} disabled={loading} className="w-full mt-4">
           {loading ? "Saving..." : "Save Columns"}

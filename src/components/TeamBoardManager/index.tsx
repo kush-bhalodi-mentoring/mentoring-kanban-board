@@ -100,7 +100,7 @@ export default function TeamBoardManager() {
   }
 
   return (
-    <Card className="w-full text-left rounded-none">
+    <Card className="w-full text-left rounded-none mb-0">
       <CardContent className="px-4 space-y-4">
         {/* If board is loaded, display the board name as a heading and the description below */}
         {board ? (
