@@ -58,21 +58,31 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
   if (!isAdmin) return null
 
   return (
-    <div className="p-4 border rounded bg-muted">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-muted-foreground">Columns</h2>
+    <div className="w-full p-4 bg-muted rounded">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-sm font-semibold text-muted-foreground">Board Columns</h2>
         <Button size="sm" onClick={() => setColumnDialogOpen(true)}>
           Manage Columns
         </Button>
       </div>
 
-      <ul className="mt-4 space-y-1">
-        {columns.map((column) => (
-          <li key={column.id} className="text-sm">
-            {column.name}
-          </li>
-        ))}
-      </ul>
+      {/* Scroll container with adjusted padding */}
+      <div className="overflow-x-auto pt-2">
+        <div className="flex space-x-4 min-w-max">
+          {columns.map((column) => (
+            <div
+              key={column.id}
+              className="bg-white shadow rounded-lg p-4 flex flex-col min-h-[120px] w-[250px] mb-2.5" // Added margin-bottom here
+            >
+              <h3 className="text-sm font-semibold mb-2">{column.name}</h3>
+              <div className="flex-1 text-xs text-muted-foreground italic">
+                {/* Placeholder for tasks */}
+                No tasks
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
       <ColumnManagerDialog
         boardId={boardId}
