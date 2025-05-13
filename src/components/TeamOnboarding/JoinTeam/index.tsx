@@ -1,6 +1,3 @@
-
-// src/app/team/join/page.tsx
-
 "use client"
 
 import { useEffect, useState } from "react"
@@ -13,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { TeamMemberRoles, TeamsTable as Team } from "@/types/supabaseTableData"
 import { DB_TABLE_NAMES as TABLE } from "@/constants/databaseTableNames";
 import { ROUTES } from "@/constants/routes";
+
 
 export default function JoinTeamPage() {
   const router = useRouter()
@@ -32,7 +30,6 @@ export default function JoinTeamPage() {
         return
       }
     
-      // Querying with raw SQL using 'rpc()'
       const { data: availableTeams, error: teamError } = await supabase
         .rpc('get_teams_not_joined', { uuser_id: userData.user.id })
     

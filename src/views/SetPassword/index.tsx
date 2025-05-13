@@ -83,7 +83,7 @@ export default function SetPasswordView() {
 
       setSuccess(true);
 
-      router.push(ROUTES.TEAM_ID(teamId));
+      router.push(ROUTES.TEAM_ID(teamId!));
     } catch (err: unknown) {
       const error = err as Error;
       setError(error.message || "Failed to set password");

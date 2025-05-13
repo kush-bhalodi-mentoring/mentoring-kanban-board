@@ -100,13 +100,12 @@ export default function TeamBoardManager() {
   }
 
   return (
-    <Card className="w-full max-w-xl text-left mt-6">
-      <CardContent className="p-6 space-y-4">
+    <Card className="w-full text-left rounded-none">
+      <CardContent className="px-4 space-y-4">
         {/* If board is loaded, display the board name as a heading and the description below */}
         {board ? (
           <div>
-            <h2 className="text-xl font-semibold">{board.name}</h2>
-            <p className="text-gray-600">{board.description}</p>
+            <h2 className="text-xl font-semibold mb-2">{board.name}</h2>
           </div>
         ) : (
           // Otherwise, show the form to create a new board
