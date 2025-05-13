@@ -69,6 +69,7 @@ export default function SetPasswordView() {
         if (signInError) throw signInError;
       }
 
+      console.log("userId:", userId, "teamId:", teamId);
       if (userId && teamId) {
         const { error: statusUpdateError } = await supabase
           .from("user_team")

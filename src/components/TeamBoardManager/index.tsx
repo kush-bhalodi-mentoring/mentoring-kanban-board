@@ -121,7 +121,7 @@ export default function TeamBoardManager() {
                   <FormItem>
                     <FormLabel>Board Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Team Roadmap" {...field} />
+                      <Input className="w-1/3" placeholder="Team Roadmap" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -135,17 +135,14 @@ export default function TeamBoardManager() {
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Project planning and task board"
-                        {...field}
-                      />
+                      <Input className="w-1/3" placeholder="Project planning and task board" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-1/3">
                 Create Board
               </Button>
             </form>
