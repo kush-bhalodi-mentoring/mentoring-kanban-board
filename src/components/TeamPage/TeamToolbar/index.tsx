@@ -7,6 +7,7 @@ import { supabase } from "@/utils/supabase/client"
 import { DB_TABLE_NAMES as TABLE } from "@/constants/databaseTableNames"
 import EditTeamDialog from "@/components/TeamPage/Dialogs/EditTeamDialog"
 import EditTeamMembersDialog from "@/components/TeamPage/Dialogs/EditTeamMembersDialog"
+import InviteUserDialog from "@/components/TeamPage/Dialogs/InviteUserDialog";
 
 type TeamToolbarProps = {
   teamId: string
@@ -29,11 +30,11 @@ export default function TeamToolbar({
   const [isAdmin, setIsAdmin] = useState(false)
   const [editTeamOpen, setEditTeamOpen] = useState(false)
   const [editMembersOpen, setEditMembersOpen] = useState(false)
+  const [inviteUserOpen, setInviteUserOpen] = useState(false)
   const [teamName, setTeamName] = useState(initialName)
   const [teamDesc, setTeamDesc] = useState(initialDescription)
   const [, setMembers] = useState<Member[]>([])
 
-  // Admin check
   const checkAdminStatus = useCallback(async () => {
     const { data: userData } = await supabase.auth.getUser()
     if (!userData?.user) return
@@ -50,7 +51,6 @@ export default function TeamToolbar({
     }
   }, [teamId])
 
-  // Fetch members
   const fetchTeamMembers = useCallback(async () => {
     const { data } = await supabase
       .from("team_members_with_email")
@@ -78,6 +78,10 @@ export default function TeamToolbar({
 
   const toggleEditMembersDialog = () => {
     setEditMembersOpen((prev) => !prev)
+  }
+
+  const toggleInviteUserDialog = () => {
+    setInviteUserOpen((prev) => !prev)
   }
 
   const handleTeamUpdate = (newName: string, newDescription: string) => {
@@ -108,6 +112,15 @@ export default function TeamToolbar({
         Team Members
       </Button>
 
+      <Button
+        variant="ghost"
+        className="py-[2px] px-[4px] text-sm font-semibold text-muted-foreground flex items-center"
+        onClick={toggleInviteUserDialog}
+      >
+        <Settings className="w-4 h-4" />
+        Invite User
+      </Button>
+
       <EditTeamDialog
         teamId={teamId}
         open={editTeamOpen}
@@ -121,6 +134,10 @@ export default function TeamToolbar({
         teamId={teamId}
         open={editMembersOpen}
         onOpenChange={setEditMembersOpen}
+      />
+      <InviteUserDialog
+        open={inviteUserOpen}
+        onOpenChange={setInviteUserOpen}
       />
     </>
   )

@@ -1,6 +1,3 @@
-
-// src/app/team/join/page.tsx
-
 "use client"
 
 import { useEffect, useState } from "react"
@@ -33,7 +30,6 @@ export default function JoinTeamPage() {
         return
       }
     
-      // Querying with raw SQL using 'rpc()'
       const { data: availableTeams, error: teamError } = await supabase
         .rpc('get_teams_not_joined', { uuser_id: userData.user.id })
     

@@ -45,7 +45,7 @@ export function TeamSwitcher({ currentTeamId }: { currentTeamId: string }) {
     const teamIds = (memberData ?? []).map((m: TeamMemberRecord) => m.team_id)
 
     if (teamIds.length === 0) {
-        return [] // User has joined no teams
+        return []
     }
 
     const { data: teamData, error: teamError } = await supabase

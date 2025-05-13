@@ -32,7 +32,7 @@ export default function EditTeamMembersDialog({
 
     const fetchMembers = async () => {
       const { data, error } = await supabase
-        .from("team_members_with_email") // make sure this includes `role`
+        .from("team_members_with_email")
         .select("user_id, email, role")
         .eq("team_id", teamId)
 
