@@ -8,18 +8,18 @@ import { TeamSwitcher } from "@/components/TeamPage/TeamSwitch/TeamSwitcher"
 import TeamBoardManager from "@/components/TeamBoardManager";
 
 type TeamViewProps = {
-  teamId: string
-}
+  teamId: string;
+};
 
 type Team = {
-  id: string
-  name: string
-  description: string
-}
+  id: string;
+  name: string;
+  description: string;
+};
 
 export default function TeamView({ teamId }: TeamViewProps) {
-  const [team, setTeam] = useState<Team | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [team, setTeam] = useState<Team | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchTeam = async () => {
@@ -27,22 +27,22 @@ export default function TeamView({ teamId }: TeamViewProps) {
         .from(TABLE.TEAMS)
         .select("*")
         .eq("id", teamId)
-        .single()
+        .single();
 
       if (error) {
-        console.error("Failed to fetch team", error)
+        console.error("Failed to fetch team", error);
       } else {
-        setTeam(data)
+        setTeam(data);
       }
 
-      setLoading(false)
-    }
+      setLoading(false);
+    };
 
-    fetchTeam()
-  }, [teamId])
+    fetchTeam();
+  }, [teamId]);
 
-  if (loading) return <div className="p-6">Loading...</div>
-  if (!team) return <div className="p-6">Team not found.</div>
+  if (loading) return <div className="p-6">Loading...</div>;
+  if (!team) return <div className="p-6">Team not found.</div>;
 
   return (
   <div>
@@ -68,6 +68,7 @@ export default function TeamView({ teamId }: TeamViewProps) {
     <div className="space-y-6">
       <TeamBoardManager />
 
+      <TeamBoardManager />
       {/* future: columns, invitations list, etc */}
     </div>
   </div>
