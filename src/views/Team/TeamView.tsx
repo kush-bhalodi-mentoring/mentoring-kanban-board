@@ -68,7 +68,6 @@ export default function TeamView({ teamId }: TeamViewProps) {
     <div className="space-y-6">
       <TeamBoardManager />
 
-      <TeamBoardManager />
       {/* future: columns, invitations list, etc */}
     </div>
   </div>
