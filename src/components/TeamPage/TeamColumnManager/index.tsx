@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { supabase } from "@/utils/supabase/client"
 import { DB_TABLE_NAMES as TABLE } from "@/constants/databaseTableNames"
 import { Button } from "@/components/ui/button"
@@ -11,10 +11,17 @@ type TeamColumnManagerProps = {
   boardId: string
 }
 
+type ColumnProps = {
+  id: string
+  name: string
+  position: number
+  board_id: string
+}
+
 export default function TeamColumnManager({ teamId, boardId }: TeamColumnManagerProps) {
   const [isAdmin, setIsAdmin] = useState(false)
   const [columnDialogOpen, setColumnDialogOpen] = useState(false)
-  const [columns, setColumns] = useState<any[]>([])
+  const [columns, setColumns] = useState<ColumnProps[]>([])
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -37,7 +44,7 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
     checkAdmin()
   }, [teamId])
 
-  const fetchColumns = async () => {
+  const fetchColumns = useCallback(async () => {
     const { data, error } = await supabase
       .from(TABLE.COLUMNS)
       .select("*")
@@ -49,11 +56,11 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
     } else {
       console.error("Failed to fetch columns", error)
     }
-  }
+  }, [boardId])
 
   useEffect(() => {
     fetchColumns()
-  }, [boardId])
+  }, [boardId, fetchColumns])
 
   if (!isAdmin) return null
 
@@ -66,17 +73,15 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
         </Button>
       </div>
 
-      {/* Scroll container with adjusted padding */}
       <div className="overflow-x-auto pt-2">
         <div className="flex space-x-4 min-w-max">
           {columns.map((column) => (
             <div
               key={column.id}
-              className="bg-white shadow rounded-lg p-4 flex flex-col min-h-[120px] w-[250px] mb-2.5" // Added margin-bottom here
+              className="bg-white shadow rounded-lg p-4 flex flex-col min-h-[120px] w-[250px] mb-2.5"
             >
               <h3 className="text-sm font-semibold mb-2">{column.name}</h3>
               <div className="flex-1 text-xs text-muted-foreground italic">
-                {/* Placeholder for tasks */}
                 No tasks
               </div>
             </div>

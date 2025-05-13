@@ -18,12 +18,6 @@ type Team = {
   description: string;
 };
 
-type Board = {
-  id: string
-  team_id: string
-  name: string
-}
-
 export default function TeamView({ teamId }: TeamViewProps) {
   const [team, setTeam] = useState<Team | null>(null)
   const [boardId, setBoardId] = useState<string | null>(null)
