@@ -6,6 +6,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  DragEndEvent
 } from "@dnd-kit/core"
 import {
   SortableContext,
@@ -103,15 +104,16 @@ export default function ColumnManagerDialog({ boardId, open, onOpenChange, onSuc
   const [columnsToDelete, setColumnsToDelete] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
 
-  const DEFAULT_COLUMNS = [
-    { id: uuidv4(), name: "To Do", position: 0, boardId },
-    { id: uuidv4(), name: "In Progress", position: 1, boardId },
-    { id: uuidv4(), name: "Done", position: 2, boardId },
-  ]
+  
 
   const sensors = useSensors(useSensor(PointerSensor))
 
   useEffect(() => {
+    const DEFAULT_COLUMNS = [
+      { id: uuidv4(), name: "To Do", position: 0, boardId },
+      { id: uuidv4(), name: "In Progress", position: 1, boardId },
+      { id: uuidv4(), name: "Done", position: 2, boardId },
+    ]
     const fetchColumns = async () => {
       const { data } = await supabase
         .from(TABLE.COLUMNS)
@@ -156,7 +158,7 @@ export default function ColumnManagerDialog({ boardId, open, onOpenChange, onSuc
     }
   }
 
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
 
