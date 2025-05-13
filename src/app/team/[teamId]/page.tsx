@@ -1,5 +1,12 @@
 import TeamView from "@/views/Team/TeamView";
+import { JSX } from "react";
 
-export default function TeamPage() {
-  return <TeamView />;
+type PageProps = {
+  params: Promise<{ teamId: string }>;
+};
+
+export default async function TeamPage(props: PageProps): Promise<JSX.Element> {
+  const pageParams = await props.params;
+
+  return <TeamView teamId={pageParams.teamId} />;
 }
