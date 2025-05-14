@@ -167,70 +167,73 @@ export default function ColumnManagerDialog({ boardId, open, onOpenChange, onSuc
 
     setColumns((prev) => arrayMove(prev, oldIndex, newIndex))
   }
+  
 
-  const handleSave = async () => {
-    setLoading(true)
+  const cleanAndOrderColumns = (columns: Column[]) => {
+  const cleaned = columns.filter((col) => col.name.trim() !== "")
+  return cleaned.map((col, index) => ({
+    ...col,
+    position: index + 1,
+  }))
+}
 
-    const cleaned = columns.filter((col) => col.name.trim() !== "")
+const insertNewColumns = async (columns: Column[], boardId: string) => {
+  const insertData = columns.map((col) => ({
+    id: col.id || uuidv4(),
+    name: col.name,
+    board_id: boardId,
+    position: col.position,
+  }))
+  const { error } = await supabase.from("columns").insert(insertData)
+  if (error) throw new Error("Failed to insert new columns")
+}
 
-    const ordered = cleaned.map((col, index) => ({
-      ...col,
-      position: index + 1,
-    }))
+const updateExistingColumns = async (columns: Column[]) => {
+  for (const col of columns) {
+    const { error } = await supabase
+      .from("columns")
+      .update({ name: col.name, position: col.position })
+      .eq("id", col.id)
+    if (error) throw new Error("Failed to update columns")
+  }
+}
+
+const deleteColumns = async (ids: string[]) => {
+  const { error } = await supabase.from("columns").delete().in("id", ids)
+  if (error) throw new Error("Failed to delete columns")
+}
+
+const handleSave = async () => {
+  setLoading(true)
+  try {
+    const ordered = cleanAndOrderColumns(columns)
 
     const newCols = ordered.filter((col) => col.isNew)
     const existingCols = ordered.filter((col) => !col.isNew)
 
     if (newCols.length > 0) {
-      const insertData = newCols.map((col) => ({
-        id: col.id || uuidv4(),
-        name: col.name,
-        board_id: boardId,
-        position: col.position,
-      }))
-
-      const { error: insertError } = await supabase.from("columns").insert(insertData)
-      if (insertError) {
-        toast.error("Failed to insert new columns")
-        console.error(insertError)
-        setLoading(false)
-        return
-      }
+      await insertNewColumns(newCols, boardId)
     }
 
-    for (const col of existingCols) {
-      const { error: updateError } = await supabase
-        .from("columns")
-        .update({ name: col.name, position: col.position })
-        .eq("id", col.id)
-
-      if (updateError) {
-        toast.error("Failed to update columns")
-        console.error(updateError)
-        setLoading(false)
-        return
-      }
+    if (existingCols.length > 0) {
+      await updateExistingColumns(existingCols)
     }
 
     if (columnsToDelete.length > 0) {
-      const { error: deleteError } = await supabase
-        .from("columns")
-        .delete()
-        .in("id", columnsToDelete)
-
-      if (deleteError) {
-        toast.error("Failed to delete columns")
-        console.error(deleteError)
-        setLoading(false)
-        return
-      }
+      await deleteColumns(columnsToDelete)
     }
 
     toast.success("Columns updated successfully")
-    setLoading(false)
     onOpenChange(false)
     onSuccess()
+  } catch (error) {
+    console.error(error)
+    toast.error((error as Error).message || "An error occurred")
+  } finally {
+    setLoading(false)
   }
+}
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

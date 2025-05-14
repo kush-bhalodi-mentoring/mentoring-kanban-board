@@ -5,6 +5,7 @@ import { supabase } from "@/utils/supabase/client"
 import { DB_TABLE_NAMES as TABLE } from "@/constants/databaseTableNames"
 import { Button } from "@/components/ui/button"
 import ColumnManagerDialog from "@/components/TeamPage/Dialogs/ColumnManagerDialog"
+import { toast } from "sonner"
 
 type TeamColumnManagerProps = {
   teamId: string
@@ -54,7 +55,7 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
     if (!error && data) {
       setColumns(data)
     } else {
-      console.error("Failed to fetch columns", error)
+      toast.error("Failed to fetch columns")
     }
   }, [boardId])
 
