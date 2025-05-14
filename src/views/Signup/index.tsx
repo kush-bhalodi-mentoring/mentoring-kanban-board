@@ -19,16 +19,13 @@ export default function SignupView() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: "http://localhost:3000/auth/confirm",
-      },
     });
 
     if (error) {
       toast.error("Signup failed: " + error.message);
     } else {
-      toast.success("Check your email to confirm your signup.");
-      router.push(ROUTES.LOGIN);
+      toast.success("Signup successful.");
+      router.push(ROUTES.TEAM);
     }
 
     setLoading(false);
