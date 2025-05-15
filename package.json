@@ -40,6 +40,7 @@
     "react-hook-form": "^7.56.1",
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.2.0",
+    "tinymce": "^7.9.0",
     "uuid": "^11.1.0",
     "zod": "^3.24.3"
   },

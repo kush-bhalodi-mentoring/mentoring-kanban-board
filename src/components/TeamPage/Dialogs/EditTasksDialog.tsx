@@ -10,6 +10,7 @@ import { toast } from "sonner"
 import { supabase } from "@/utils/supabase/client"
 import DatePicker from "react-datepicker"
 import { Editor } from "@tinymce/tinymce-react"
+import type { Editor as TinyMCEEditor } from "tinymce"
 
 import "react-datepicker/dist/react-datepicker.css"
 
@@ -46,7 +47,7 @@ export default function EditTaskDialog({ task, open, onOpenChange, onSuccess, te
   const [teamUsers, setTeamUsers] = useState<{ id: string; email: string }[]>([])
   const [description, setDescription] = useState(task.description || "")
   const [isEditingDescription, setIsEditingDescription] = useState(false)
-  const editorRef = useRef<any>(null)
+  const editorRef = useRef<TinyMCEEditor | null>(null)
 
   useEffect(() => {
     setEditedTitle(task.title)
