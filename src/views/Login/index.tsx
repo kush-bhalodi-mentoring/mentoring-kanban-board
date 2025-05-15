@@ -27,7 +27,7 @@ export default function LoginView() {
       toast.error("Login failed: " + error.message);
     } else {
       toast.success("Login successful.");
-      router.push(ROUTES.TEAM);
+      router.push(ROUTES.HOME);
     }
 
     setLoading(false);
