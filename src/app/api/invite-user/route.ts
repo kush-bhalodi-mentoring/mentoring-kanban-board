@@ -42,7 +42,7 @@ export async function POST(request: Request) {
         return throwIfError({ message: "User already in this team." }, 400)
       }
 
-      const { error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+      const { data, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
         type: "magiclink",
         email,
         options: {
@@ -51,6 +51,14 @@ export async function POST(request: Request) {
       })
 
       if (linkError) return throwIfError(linkError)
+
+      const magicLink = data?.properties?.action_link
+
+      console.log("Generated magic link:", magicLink)
+
+      if (!magicLink) {
+        return throwIfError({ message: "Magic link not generated." })
+      }
 
       const { error: insertError } = await supabaseAdmin.from("user_team").insert({
         user_id: userId,
