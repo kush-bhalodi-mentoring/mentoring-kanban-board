@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react"
 import { addDays, format } from "date-fns"
 import { CalendarIcon } from "lucide-react"
@@ -18,12 +20,12 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-type DatePickerProps = {
+export type DatePickerProps = {
   date: Date | null
   onDateChange: (date: Date | null) => void
 }
 
-export function DatePicker({ date, onDateChange }: DatePickerProps) {
+const DatePicker: React.FC<DatePickerProps> = ({ date, onDateChange }) => {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -40,31 +42,26 @@ export function DatePicker({ date, onDateChange }: DatePickerProps) {
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        sideOffset={4}
-        className="z-50 flex flex-col space-y-2 p-2"
-        avoidCollisions={false}
+        className="flex w-auto flex-col space-y-2 p-2"
       >
         <Select
-          onValueChange={(value) =>
-            onDateChange(addDays(new Date(), parseInt(value)))
-          }
+          onValueChange={(value) => onDateChange(addDays(new Date(), parseInt(value)))}
         >
           <SelectTrigger>
             <SelectValue placeholder="Quick select" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent position="popper">
             <SelectItem value="0">Today</SelectItem>
             <SelectItem value="1">Tomorrow</SelectItem>
             <SelectItem value="3">In 3 days</SelectItem>
             <SelectItem value="7">In a week</SelectItem>
           </SelectContent>
         </Select>
-
-        <div className="rounded-md border p-1">
+        <div className="rounded-md border">
           <Calendar
             mode="single"
             selected={date || undefined}
-            onSelect={(selected) => onDateChange(selected ?? null)}
+            onSelect={(selectedDate) => onDateChange(selectedDate ?? null)}
           />
         </div>
       </PopoverContent>
@@ -72,3 +69,4 @@ export function DatePicker({ date, onDateChange }: DatePickerProps) {
   )
 }
 
+export default DatePicker

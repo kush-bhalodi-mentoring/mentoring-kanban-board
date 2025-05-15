@@ -6,7 +6,12 @@ import { DB_TABLE_NAMES as TABLE } from "@/constants/databaseTableNames"
 import { Button } from "@/components/ui/button"
 import ColumnManagerDialog from "@/components/TeamPage/Dialogs/ColumnManagerDialog"
 import CreateTaskDialog from "../Dialogs/CreateTaskDialog"
+
 import { toast } from "sonner"
+import { Badge } from "@/components/ui/badge"
+import { CalendarIcon } from "lucide-react"
+import { format } from "date-fns"
+import EditTaskDialog from "../Dialogs/EditTasksDialog"
 
 type TeamColumnManagerProps = {
   teamId: string
@@ -20,12 +25,25 @@ type ColumnProps = {
   board_id: string
 }
 
+type TaskProps = {
+  id: string
+  title: string
+  description: string
+  column_id: string
+  due_date: string | null
+  type: string
+  priority: string,
+  assigned_to: string
+}
+
 export default function TeamColumnManager({ teamId, boardId }: TeamColumnManagerProps) {
   const [isAdmin, setIsAdmin] = useState(false)
   const [columnDialogOpen, setColumnDialogOpen] = useState(false)
   const [taskDialogOpen, setTaskDialogOpen] = useState(false)
   const [selectedColumnId, setSelectedColumnId] = useState<string | null>(null)
   const [columns, setColumns] = useState<ColumnProps[]>([])
+  const [tasks, setTasks] = useState<TaskProps[]>([])
+  const [activeTask, setActiveTask] = useState<TaskProps | null>(null)
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -62,9 +80,23 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
     }
   }, [boardId])
 
+  const fetchTasks = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("tasks")
+      .select("*")
+      .eq("board_id", boardId)
+
+    if (!error && data) {
+      setTasks(data)
+    } else {
+      toast.error("Failed to fetch tasks")
+    }
+  }, [boardId])
+
   useEffect(() => {
     fetchColumns()
-  }, [boardId, fetchColumns])
+    fetchTasks()
+  }, [fetchColumns, fetchTasks])
 
   if (!isAdmin) return null
 
@@ -99,8 +131,46 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
                   +
                 </Button>
               </div>
-              <div className="flex-1 text-xs text-muted-foreground italic">
-                No tasks
+
+              <div className="flex flex-col space-y-4">
+                {tasks.filter(t => t.column_id === column.id).map(task => (
+                  <div
+                    key={task.id}
+                    onClick={() => setActiveTask(task)}
+                    className="p-4 bg-white text-black rounded shadow cursor-pointer border hover:shadow-md transition"
+                  >
+                    <h4 className="font-semibold text-base">{task.title}</h4>
+
+                    {task.description && (
+                      <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
+                    )}
+
+                    <div className="flex gap-2 mt-2 flex-wrap">
+                      {task.type === "Bug" && (
+                        <Badge className="bg-red-100 text-red-600 border border-red-200">
+                          Bug
+                        </Badge>
+                      )}
+                      {task.type === "Feature" && (
+                        <Badge className="bg-green-100 text-green-700 border border-green-200">
+                          Feature
+                        </Badge>
+                      )}
+                      {task.type === "Story" && (
+                        <Badge className="bg-blue-100 text-blue-700 border border-blue-200">
+                          Story
+                        </Badge>
+                      )}
+                    </div>
+
+                    {task.due_date && (
+                      <div className="flex items-center text-sm text-muted-foreground mt-2">
+                        <CalendarIcon className="w-4 h-4 mr-1" />
+                        {format(new Date(task.due_date), "MMM d")}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           ))}
@@ -121,9 +191,17 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
           teamId={teamId}
           boardId={boardId}
           columnId={selectedColumnId}
-          onSuccess={() => {
-            setTaskDialogOpen(false)
-          }}
+          onSuccess={fetchTasks}
+        />
+      )}
+
+      {activeTask && (
+        <EditTaskDialog
+          teamId={teamId}
+          task={activeTask}
+          open={!!activeTask}
+          onOpenChange={() => setActiveTask(null)}
+          onSuccess={fetchTasks}
         />
       )}
     </div>
