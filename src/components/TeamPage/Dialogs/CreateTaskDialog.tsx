@@ -17,9 +17,14 @@ type Props = {
   onSuccess: () => void
 }
 
+type TaskType = 'Bug' | 'Feature' | 'Story'
+
+
+
 export default function CreateTaskDialog({ open, onOpenChange, boardId, teamId, columnId, onSuccess }: Props) {
   const [title, setTitle] = useState("")
-  const [type, setType] = useState("Task")
+  const [type, setType] = useState<TaskType>('Bug')
+  
 
 
   const handleCreate = async () => {
@@ -64,7 +69,10 @@ export default function CreateTaskDialog({ open, onOpenChange, boardId, teamId, 
             onChange={(e) => setTitle(e.target.value)}
           />
 
-          <Select value={type} onValueChange={(value) => setType(value as any)}>
+          <Select
+            value={type}
+            onValueChange={(value) => setType(value as TaskType)} // cast safely here
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select type" />
             </SelectTrigger>

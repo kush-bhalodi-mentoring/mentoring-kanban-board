@@ -126,6 +126,7 @@ export default function EditTaskDialog({ task, open, onOpenChange, onSuccess, te
           <div className="mt-6 flex justify-between gap-4">
             <Button
               type="submit"
+              onClick={handleSave}
               className="flex-1 bg-black text-white hover:bg-gray-800"
             >
               Save
