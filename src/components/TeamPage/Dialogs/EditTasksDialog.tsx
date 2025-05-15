@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -17,10 +17,13 @@ type Props = {
   task: {
     id: string
     title: string
-    description: string
+    description: string | null
     type: string
     assigned_to: string | null
     due_date?: string | null
+    position: number
+    estimation?: number
+    created_by: string
   }
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -42,6 +45,8 @@ export default function EditTaskDialog({ task, open, onOpenChange, onSuccess, te
   )
   const [teamUsers, setTeamUsers] = useState<{ id: string; email: string }[]>([])
   const [description, setDescription] = useState(task.description || "")
+  const [isEditingDescription, setIsEditingDescription] = useState(false)
+  const editorRef = useRef<any>(null)
 
   useEffect(() => {
     setEditedTitle(task.title)
@@ -73,6 +78,7 @@ export default function EditTaskDialog({ task, open, onOpenChange, onSuccess, te
       .from("tasks")
       .update({
         title: editedTitle,
+        description: description, 
         type: editedType,
         assigned_to: assignedTo || null,
         due_date: dueDate?.toISOString() ?? null,
@@ -110,23 +116,50 @@ export default function EditTaskDialog({ task, open, onOpenChange, onSuccess, te
         <div className="space-y-4">
           <div className="space-y-1">
             <Label>Title</Label>
-            <Input value={editedTitle} onChange={(e) => setEditedTitle(e.target.value)} />
+            <Input
+              value={editedTitle}
+              onChange={(e) => setEditedTitle(e.target.value)}
+              className="border-none shadow-none px-0 text-base font-medium focus-visible:ring-0 focus-visible:ring-offset-0"
+              placeholder="Task title"
+            />
           </div>
 
           <div className="space-y-1">
             <Label>Description</Label>
-            <Editor
-              apiKey="gpbgijr1jq5v1yv1i7oas4iz569in6q4cmtg6vfd8ngdve0p"
-              value={description}
-              init={{
-                height: 200,
-                menubar: false,
-                plugins: ["link", "lists", "autolink"],
-                toolbar: "undo redo | bold italic | bullist numlist | link",
-              }}
-              onEditorChange={(content) => setDescription(content)}
-            />
+
+            {!isEditingDescription ? (
+              <div
+                className="min-h-[80px] rounded-md px-2 py-1 text-sm text-muted-foreground hover:bg-muted cursor-pointer"
+                onClick={() => setIsEditingDescription(true)}
+                dangerouslySetInnerHTML={{
+                  __html:
+                    description?.trim()?.length > 0
+                      ? description
+                      : "<span class='text-muted-foreground italic'>Click to add description...</span>",
+                }}
+              />
+            ) : (
+              <Editor
+                apiKey={process.env.NEXT_PUBLIC_TINYMCE_EDITOR_API_KEY}
+                onInit={(evt, editor) => (editorRef.current = editor)}
+                value={description}
+                init={{
+                  height: 200,
+                  menubar: false,
+                  plugins: ["link", "lists", "autolink"],
+                  toolbar: "undo redo | bold italic | bullist numlist | link",
+                  placeholder: "Add a description...",
+                  content_style: "body { font-family: sans-serif; font-size: 14px; padding: 8px; }",
+                }}
+                onEditorChange={(content) => setDescription(content)}
+                onBlur={() => {
+                  setIsEditingDescription(false)
+                  setDescription(editorRef.current?.getContent() || "")
+                }}
+              />
+            )}
           </div>
+
 
           <div className="space-y-1">
             <Label>Type</Label>

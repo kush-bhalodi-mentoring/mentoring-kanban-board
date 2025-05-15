@@ -6,12 +6,13 @@ import { DB_TABLE_NAMES as TABLE } from "@/constants/databaseTableNames"
 import { Button } from "@/components/ui/button"
 import ColumnManagerDialog from "@/components/TeamPage/Dialogs/ColumnManagerDialog"
 import CreateTaskDialog from "../Dialogs/CreateTaskDialog"
-
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
-import EditTaskDialog from "../Dialogs/EditTasksDialog"
+import EditTaskDialog from "@/components/TeamPage/Dialogs/EditTasksDialog"
+import TaskCard from "@/components/TeamPage/TaskCard"
+
 
 type TeamColumnManagerProps = {
   teamId: string
@@ -25,15 +26,19 @@ type ColumnProps = {
   board_id: string
 }
 
+type TaskType = "Bug" | "Feature" | "Story"
+
 type TaskProps = {
   id: string
   title: string
-  description: string
+  description: string | null
   column_id: string
   due_date: string | null
-  type: string
-  priority: string,
+  type: TaskType         // <- changed from string to TaskType
+  position: number
   assigned_to: string
+  estimation?: number
+  created_by: string
 }
 
 export default function TeamColumnManager({ teamId, boardId }: TeamColumnManagerProps) {
@@ -133,44 +138,24 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
               </div>
 
               <div className="flex flex-col space-y-4">
-                {tasks.filter(t => t.column_id === column.id).map(task => (
-                  <div
-                    key={task.id}
-                    onClick={() => setActiveTask(task)}
-                    className="p-4 bg-white text-black rounded shadow cursor-pointer border hover:shadow-md transition"
-                  >
-                    <h4 className="font-semibold text-base">{task.title}</h4>
-
-                    {task.description && (
-                      <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
-                    )}
-
-                    <div className="flex gap-2 mt-2 flex-wrap">
-                      {task.type === "Bug" && (
-                        <Badge className="bg-red-100 text-red-600 border border-red-200">
-                          Bug
-                        </Badge>
-                      )}
-                      {task.type === "Feature" && (
-                        <Badge className="bg-green-100 text-green-700 border border-green-200">
-                          Feature
-                        </Badge>
-                      )}
-                      {task.type === "Story" && (
-                        <Badge className="bg-blue-100 text-blue-700 border border-blue-200">
-                          Story
-                        </Badge>
-                      )}
-                    </div>
-
-                    {task.due_date && (
-                      <div className="flex items-center text-sm text-muted-foreground mt-2">
-                        <CalendarIcon className="w-4 h-4 mr-1" />
-                        {format(new Date(task.due_date), "MMM d")}
-                      </div>
-                    )}
-                  </div>
+                {tasks
+                  .filter(t => t.column_id === column.id)
+                  .map(task => (
+                    <TaskCard
+                      key={task.id}
+                      task={{
+                        ...task,
+                        type: task.type as TaskType
+                      }}
+                      teamId={teamId}
+                      open={!!activeTask && activeTask.id === task.id}
+                      onOpenChange={() => setActiveTask(null)}
+                      onSuccess={() => {
+                        setActiveTask(task)
+                      }}
+                    />
                 ))}
+
               </div>
             </div>
           ))}
