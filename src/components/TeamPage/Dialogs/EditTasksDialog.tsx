@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { supabase } from "@/utils/supabase/client"
+import DatePicker from "react-datepicker"
+
+import "react-datepicker/dist/react-datepicker.css"
 
 type Props = {
   task: {
@@ -15,6 +18,7 @@ type Props = {
     title: string
     type: string
     assigned_to: string | null
+    due_date?: string | null
   }
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -22,16 +26,28 @@ type Props = {
   teamId: string
 }
 
+type TaskType = 'Bug' | 'Feature' | 'Story'
+
 export default function EditTaskDialog({ task, open, onOpenChange, onSuccess, teamId }: Props) {
   const [editedTitle, setEditedTitle] = useState(task.title)
-  const [editedType, setEditedType] = useState(task.type || "Task")
+  const defaultType: TaskType = ['Bug', 'Feature', 'Story'].includes(task.type as TaskType)
+  ? (task.type as TaskType)
+  : 'Bug'
+  const [editedType, setEditedType] = useState<TaskType>(defaultType)
   const [assignedTo, setAssignedTo] = useState(task.assigned_to || "")
+  const [dueDate, setDueDate] = useState<Date | null>(
+    task.due_date ? new Date(task.due_date) : null
+  )
   const [teamUsers, setTeamUsers] = useState<{ id: string; email: string }[]>([])
 
   useEffect(() => {
     setEditedTitle(task.title)
-    setEditedType(task.type || "Task")
+
+    const validTypes: TaskType[] = ["Bug", "Feature", "Story"]
+    setEditedType(validTypes.includes(task.type as TaskType) ? (task.type as TaskType) : "Bug")
+
     setAssignedTo(task.assigned_to || "")
+    setDueDate(task.due_date ? new Date(task.due_date) : null)
   }, [task])
 
   useEffect(() => {
@@ -56,6 +72,7 @@ export default function EditTaskDialog({ task, open, onOpenChange, onSuccess, te
         title: editedTitle,
         type: editedType,
         assigned_to: assignedTo || null,
+        due_date: dueDate?.toISOString() ?? null,
       })
       .eq("id", task.id)
 
@@ -95,7 +112,7 @@ export default function EditTaskDialog({ task, open, onOpenChange, onSuccess, te
 
           <div className="space-y-1">
             <Label>Type</Label>
-            <Select value={editedType} onValueChange={setEditedType}>
+            <Select value={editedType} onValueChange={(v) => setEditedType(v as 'Bug' | 'Feature' | 'Story')}>
               <SelectTrigger>
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
@@ -121,6 +138,18 @@ export default function EditTaskDialog({ task, open, onOpenChange, onSuccess, te
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-1">
+            <Label>Due date</Label>
+            <DatePicker
+              selected={dueDate}
+              onChange={(date) => setDueDate(date)}
+              dateFormat="PPP"
+              isClearable
+              placeholderText="Pick a date"
+              className="w-full rounded-md border px-3 py-2 text-sm"
+            />
           </div>
 
           <div className="mt-6 flex justify-between gap-4">
