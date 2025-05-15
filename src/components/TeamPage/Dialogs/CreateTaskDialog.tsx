@@ -24,8 +24,6 @@ type TaskType = 'Bug' | 'Feature' | 'Story'
 export default function CreateTaskDialog({ open, onOpenChange, boardId, teamId, columnId, onSuccess }: Props) {
   const [title, setTitle] = useState("")
   const [type, setType] = useState<TaskType>('Bug')
-  
-
 
   const handleCreate = async () => {
     const { data: userData } = await supabase.auth.getUser()

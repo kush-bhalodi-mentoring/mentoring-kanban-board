@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { supabase } from "@/utils/supabase/client"
 import DatePicker from "react-datepicker"
+import { Editor } from "@tinymce/tinymce-react"
 
 import "react-datepicker/dist/react-datepicker.css"
 
@@ -16,6 +17,7 @@ type Props = {
   task: {
     id: string
     title: string
+    description: string
     type: string
     assigned_to: string | null
     due_date?: string | null
@@ -39,6 +41,7 @@ export default function EditTaskDialog({ task, open, onOpenChange, onSuccess, te
     task.due_date ? new Date(task.due_date) : null
   )
   const [teamUsers, setTeamUsers] = useState<{ id: string; email: string }[]>([])
+  const [description, setDescription] = useState(task.description || "")
 
   useEffect(() => {
     setEditedTitle(task.title)
@@ -99,7 +102,7 @@ export default function EditTaskDialog({ task, open, onOpenChange, onSuccess, te
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-200 w-200">
         <DialogHeader>
           <DialogTitle>Edit Task</DialogTitle>
         </DialogHeader>
@@ -108,6 +111,21 @@ export default function EditTaskDialog({ task, open, onOpenChange, onSuccess, te
           <div className="space-y-1">
             <Label>Title</Label>
             <Input value={editedTitle} onChange={(e) => setEditedTitle(e.target.value)} />
+          </div>
+
+          <div className="space-y-1">
+            <Label>Description</Label>
+            <Editor
+              apiKey="gpbgijr1jq5v1yv1i7oas4iz569in6q4cmtg6vfd8ngdve0p"
+              value={description}
+              init={{
+                height: 200,
+                menubar: false,
+                plugins: ["link", "lists", "autolink"],
+                toolbar: "undo redo | bold italic | bullist numlist | link",
+              }}
+              onEditorChange={(content) => setDescription(content)}
+            />
           </div>
 
           <div className="space-y-1">
@@ -151,6 +169,8 @@ export default function EditTaskDialog({ task, open, onOpenChange, onSuccess, te
               className="w-full rounded-md border px-3 py-2 text-sm"
             />
           </div>
+
+          
 
           <div className="mt-6 flex justify-between gap-4">
             <Button
