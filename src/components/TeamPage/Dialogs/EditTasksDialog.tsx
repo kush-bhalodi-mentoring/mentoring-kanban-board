@@ -137,7 +137,7 @@ export default function EditTaskDialog({ task, open, onOpenChange, onSuccess, te
             <div className="space-y-1">
               {!isEditingDescription ? (
                 <div
-                  className="min-h-[80px] rounded-md px-2 py-1 text-sm text-muted-foreground hover:bg-muted cursor-pointer"
+                  className="min-h-[300px] rounded-md px-2 py-1 text-sm text-muted-foreground hover:bg-muted cursor-pointer"
                   onClick={() => setIsEditingDescription(true)}
                   dangerouslySetInnerHTML={{
                     __html:
@@ -151,8 +151,9 @@ export default function EditTaskDialog({ task, open, onOpenChange, onSuccess, te
                   apiKey={process.env.NEXT_PUBLIC_TINYMCE_EDITOR_API_KEY}
                   onInit={(evt, editor) => (editorRef.current = editor)}
                   value={description}
+                  
                   init={{
-                    height: 200,
+                    height: 300,
                     menubar: false,
                     plugins: ["link", "lists", "autolink"],
                     toolbar: "undo redo | bold italic | bullist numlist | link",
