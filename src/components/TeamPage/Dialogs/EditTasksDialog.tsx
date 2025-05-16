@@ -1,11 +1,10 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { supabase } from "@/utils/supabase/client"
 import DatePicker from "react-datepicker"
@@ -36,9 +35,11 @@ type TaskType = 'Bug' | 'Feature' | 'Story'
 
 export default function EditTaskDialog({ task, open, onOpenChange, onSuccess, teamId }: Props) {
   const [editedTitle, setEditedTitle] = useState(task.title)
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+
   const defaultType: TaskType = ['Bug', 'Feature', 'Story'].includes(task.type as TaskType)
-  ? (task.type as TaskType)
-  : 'Bug'
+    ? (task.type as TaskType)
+    : 'Bug'
   const [editedType, setEditedType] = useState<TaskType>(defaultType)
   const [assignedTo, setAssignedTo] = useState(task.assigned_to || "")
   const [dueDate, setDueDate] = useState<Date | null>(
@@ -51,10 +52,8 @@ export default function EditTaskDialog({ task, open, onOpenChange, onSuccess, te
 
   useEffect(() => {
     setEditedTitle(task.title)
-
     const validTypes: TaskType[] = ["Bug", "Feature", "Story"]
     setEditedType(validTypes.includes(task.type as TaskType) ? (task.type as TaskType) : "Bug")
-
     setAssignedTo(task.assigned_to || "")
     setDueDate(task.due_date ? new Date(task.due_date) : null)
   }, [task])
@@ -79,7 +78,7 @@ export default function EditTaskDialog({ task, open, onOpenChange, onSuccess, te
       .from("tasks")
       .update({
         title: editedTitle,
-        description: description, 
+        description: description,
         type: editedType,
         assigned_to: assignedTo || null,
         due_date: dueDate?.toISOString() ?? null,
@@ -109,120 +108,135 @@ export default function EditTaskDialog({ task, open, onOpenChange, onSuccess, te
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-200 w-200">
-        <DialogHeader>
-          <DialogTitle>Edit Task</DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <Label>Title</Label>
+      <DialogTitle></DialogTitle>
+      <DialogContent className="w-full min-w-250">
+        {/* Title Input */}
+        <div className="mb-4">
+          {!isEditingTitle ? (
+            <h2
+              className="text-2xl font-bold hover:underline cursor-pointer"
+              onClick={() => setIsEditingTitle(true)}
+            >
+              {editedTitle || "Untitled Task"}
+            </h2>
+          ) : (
             <Input
               value={editedTitle}
               onChange={(e) => setEditedTitle(e.target.value)}
-              className="border-none shadow-none px-0 text-base font-medium focus-visible:ring-0 focus-visible:ring-offset-0"
+              onBlur={() => setIsEditingTitle(false)}
+              autoFocus
               placeholder="Task title"
+              className="text-2xl font-bold"
             />
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-[70%_30%] gap-6">
+          {/* Left side: Description */}
+          <div>
+            <div className="space-y-1">
+              {!isEditingDescription ? (
+                <div
+                  className="min-h-[80px] rounded-md px-2 py-1 text-sm text-muted-foreground hover:bg-muted cursor-pointer"
+                  onClick={() => setIsEditingDescription(true)}
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      description?.trim()?.length > 0
+                        ? description
+                        : "<span class='text-muted-foreground italic'>Click to add description...</span>",
+                  }}
+                />
+              ) : (
+                <Editor
+                  apiKey={process.env.NEXT_PUBLIC_TINYMCE_EDITOR_API_KEY}
+                  onInit={(evt, editor) => (editorRef.current = editor)}
+                  value={description}
+                  init={{
+                    height: 200,
+                    menubar: false,
+                    plugins: ["link", "lists", "autolink"],
+                    toolbar: "undo redo | bold italic | bullist numlist | link",
+                    placeholder: "Add a description...",
+                    content_style:
+                      "body { font-family: sans-serif; font-size: 14px; padding: 8px; }",
+                  }}
+                  onEditorChange={(content) => setDescription(content)}
+                  onBlur={() => {
+                    setIsEditingDescription(false)
+                    setDescription(editorRef.current?.getContent() || "")
+                  }}
+                />
+              )}
+            </div>
           </div>
 
-          <div className="space-y-1">
-            <Label>Description</Label>
+          {/* Right side: Metadata */}
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm font-medium mb-1">Type</p>
+              <Select
+                value={editedType}
+                onValueChange={(v) => setEditedType(v as TaskType)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Bug">Bug</SelectItem>
+                  <SelectItem value="Feature">Feature</SelectItem>
+                  <SelectItem value="Story">Story</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-            {!isEditingDescription ? (
-              <div
-                className="min-h-[80px] rounded-md px-2 py-1 text-sm text-muted-foreground hover:bg-muted cursor-pointer"
-                onClick={() => setIsEditingDescription(true)}
-                dangerouslySetInnerHTML={{
-                  __html:
-                    description?.trim()?.length > 0
-                      ? description
-                      : "<span class='text-muted-foreground italic'>Click to add description...</span>",
-                }}
+            <div>
+              <p className="text-sm font-medium mb-1">Assign to</p>
+              <Select value={assignedTo} onValueChange={setAssignedTo}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select user" />
+                </SelectTrigger>
+                <SelectContent>
+                  {teamUsers.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <p className="text-sm font-medium mb-1">Due date</p>
+              <DatePicker
+                selected={dueDate}
+                onChange={(date) => setDueDate(date)}
+                dateFormat="PPP"
+                isClearable
+                placeholderText="Pick a date"
+                className="w-full rounded-md border px-3 py-2 text-sm"
               />
-            ) : (
-              <Editor
-                apiKey={process.env.NEXT_PUBLIC_TINYMCE_EDITOR_API_KEY}
-                onInit={(evt, editor) => (editorRef.current = editor)}
-                value={description}
-                init={{
-                  height: 200,
-                  menubar: false,
-                  plugins: ["link", "lists", "autolink"],
-                  toolbar: "undo redo | bold italic | bullist numlist | link",
-                  placeholder: "Add a description...",
-                  content_style: "body { font-family: sans-serif; font-size: 14px; padding: 8px; }",
-                }}
-                onEditorChange={(content) => setDescription(content)}
-                onBlur={() => {
-                  setIsEditingDescription(false)
-                  setDescription(editorRef.current?.getContent() || "")
-                }}
-              />
-            )}
+            </div>
           </div>
+        </div>
 
-
-          <div className="space-y-1">
-            <Label>Type</Label>
-            <Select value={editedType} onValueChange={(v) => setEditedType(v as 'Bug' | 'Feature' | 'Story')}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Bug">Bug</SelectItem>
-                <SelectItem value="Feature">Feature</SelectItem>
-                <SelectItem value="Story">Story</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1">
-            <Label>Assign to</Label>
-            <Select value={assignedTo} onValueChange={setAssignedTo}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select user" />
-              </SelectTrigger>
-              <SelectContent>
-                {teamUsers.map((user) => (
-                  <SelectItem key={user.id} value={user.id}>
-                    {user.email}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1">
-            <Label>Due date</Label>
-            <DatePicker
-              selected={dueDate}
-              onChange={(date) => setDueDate(date)}
-              dateFormat="PPP"
-              isClearable
-              placeholderText="Pick a date"
-              className="w-full rounded-md border px-3 py-2 text-sm"
-            />
-          </div>
-
-          
-
-          <div className="mt-6 flex justify-between gap-4">
-            <Button
-              type="submit"
-              onClick={handleSave}
-              className="flex-1 bg-black text-white hover:bg-gray-800"
-            >
-              Save
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={handleDelete}
-              className="flex-1"
-            >
-              Delete
-            </Button>
-          </div>
+        {/* Buttons */}
+        <div className="mt-6 flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            onClick={handleDelete}
+          >
+            Delete
+          </Button>
+          <Button
+            type="submit"
+            onClick={handleSave}
+            size="sm"
+            className="bg-black text-white hover:bg-gray-800"
+          >
+            Save
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
