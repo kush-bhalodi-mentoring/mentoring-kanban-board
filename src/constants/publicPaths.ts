@@ -1,1 +1,6 @@
-export const PUBLIC_PATHS = ['/', '/login', '/signup', '/set-password'];
+export const PUBLIC_PATHS = [
+  '/', 
+  '/login', 
+  '/signup', 
+  '/set-password'
+];
