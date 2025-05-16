@@ -8,6 +8,7 @@ import TeamToolbar from "@/components/TeamPage/TeamToolbar"
 import { TeamSwitcher } from "@/components/TeamPage/TeamSwitch/TeamSwitcher"
 import TeamBoardManager from "@/components/TeamBoardManager"
 import { toast } from "sonner"
+import TeamColumnManager from "@/components/TeamPage/TeamColumnManager"
 
 type TeamViewProps = {
   teamId: string;
@@ -21,6 +22,7 @@ type Team = {
 
 export default function TeamView({ teamId }: TeamViewProps) {
   const [team, setTeam] = useState<Team | null>(null)
+  const [boardId, setBoardId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
@@ -62,11 +64,27 @@ export default function TeamView({ teamId }: TeamViewProps) {
         setTeam(data)
       }
 
+      // Fetch board for the team
+      const { data: boardData, error: boardError } = await supabase
+        .from(TABLE.BOARDS)
+        .select("id")
+        .eq("team_id", teamId)
+        .single()
+
+      if (boardError) {
+        console.error("Failed to fetch board", boardError)
+      } else {
+        setBoardId(boardData.id)
+      }
+
       setLoading(false)
     }
-
     fetchData()
+    
   }, [teamId, router])
+
+
+
 
   if (loading) return <div className="p-6">Loading...</div>
   if (!team) return <div className="p-6">Team not found.</div>
@@ -93,6 +111,7 @@ export default function TeamView({ teamId }: TeamViewProps) {
 
       <div className="space-y-6">
         <TeamBoardManager />
+        {boardId && <TeamColumnManager teamId={teamId} boardId={boardId} />}
       </div>
     </div>
   )
