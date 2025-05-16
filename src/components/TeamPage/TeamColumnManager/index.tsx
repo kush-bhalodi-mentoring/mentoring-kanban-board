@@ -100,8 +100,6 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
     fetchTasks()
   }, [fetchColumns, fetchTasks])
 
-  if (!isAdmin) return null
-
   const handleOpenCreateTask = (columnId: string) => {
     setSelectedColumnId(columnId)
     setTaskDialogOpen(true)
@@ -111,9 +109,11 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
     <div className="w-full p-4 bg-muted rounded">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-semibold text-muted-foreground">Board Columns</h2>
-        <Button size="sm" onClick={() => setColumnDialogOpen(true)}>
-          Manage Columns
-        </Button>
+        {isAdmin && (
+          <Button size="sm" onClick={() => setColumnDialogOpen(true)}>
+            Manage Columns
+          </Button>
+        )}
       </div>
 
       <div className="overflow-x-auto pt-2">
@@ -151,20 +151,21 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
                         setActiveTask(task)
                       }}
                     />
-                ))}
-
+                  ))}
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      <ColumnManagerDialog
-        boardId={boardId}
-        open={columnDialogOpen}
-        onOpenChange={setColumnDialogOpen}
-        onSuccess={fetchColumns}
-      />
+      {isAdmin && (
+        <ColumnManagerDialog
+          boardId={boardId}
+          open={columnDialogOpen}
+          onOpenChange={setColumnDialogOpen}
+          onSuccess={fetchColumns}
+        />
+      )}
 
       {selectedColumnId && (
         <CreateTaskDialog
@@ -189,3 +190,4 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
     </div>
   )
 }
+
