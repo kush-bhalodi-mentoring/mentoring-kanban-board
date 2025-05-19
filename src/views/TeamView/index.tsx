@@ -28,6 +28,10 @@ export default function TeamView({ teamId }: TeamViewProps) {
   const [boardId, setBoardId] = useState<string | null>(null)
   const [boardName, setBoardName] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+
+  const [columnDialogOpen, setColumnDialogOpen] = useState(false)
+  const [columnsUpdatedAt, setColumnsUpdatedAt] = useState(Date.now())
+
   const router = useRouter()
 
   useEffect(() => {
@@ -85,6 +89,10 @@ export default function TeamView({ teamId }: TeamViewProps) {
     fetchData()
   }, [teamId, router])
 
+  const refreshColumns = () => {
+    setColumnsUpdatedAt(Date.now())
+  }
+
   if (loading) return <div className="p-6">Loading...</div>
   if (!team) return <div className="p-6">Team not found.</div>
 
@@ -117,6 +125,10 @@ export default function TeamView({ teamId }: TeamViewProps) {
               teamId={teamId}
               initialName={team.name}
               initialDescription={team.description}
+              boardId={boardId}
+              columnDialogOpen={columnDialogOpen}
+              setColumnDialogOpen={setColumnDialogOpen}
+              onColumnsUpdate={refreshColumns}
               onTeamUpdate={(newName, newDescription) =>
                 setTeam((prev) =>
                   prev ? { ...prev, name: newName, description: newDescription } : prev
@@ -128,11 +140,14 @@ export default function TeamView({ teamId }: TeamViewProps) {
       </div>
 
       <div className="space-y-6">
-        <TeamBoardManager
-          setBoardName={setBoardName}
-          setBoardId={setBoardId}
-        />
-        {boardId && <TeamColumnManager teamId={teamId} boardId={boardId} />}
+        <TeamBoardManager setBoardName={setBoardName} setBoardId={setBoardId} />
+        {boardId && (
+          <TeamColumnManager
+            teamId={teamId}
+            boardId={boardId}
+            refreshSignal={columnsUpdatedAt}
+          />
+        )}
       </div>
     </div>
   )

@@ -4,11 +4,9 @@ import { useEffect, useState, useCallback } from "react"
 import { supabase } from "@/utils/supabase/client"
 import { DB_TABLE_NAMES as TABLE } from "@/constants/databaseTableNames"
 import { Button } from "@/components/ui/button"
-import ColumnManagerDialog from "@/components/TeamPage/Dialogs/ColumnManagerDialog"
 import CreateTaskDialog from "../Dialogs/CreateTaskDialog"
 import { toast } from "sonner"
 import EditTaskDialog from "@/components/TeamPage/Dialogs/EditTasksDialog"
-// import TaskCard from "@/components/TeamPage/TaskCard"
 import {
   DndContext,
   closestCenter,
@@ -23,13 +21,13 @@ import {
   arrayMove,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
-import SortableTaskCard from "../SortableTaskCard" 
+import SortableTaskCard from "../SortableTaskCard"
 import DroppableColumn from "@/components/TeamPage/DroppableColumn"
-
 
 type TeamColumnManagerProps = {
   teamId: string
   boardId: string
+  refreshSignal: number
 }
 
 type ColumnProps = {
@@ -40,7 +38,6 @@ type ColumnProps = {
 }
 
 type TaskType = "Bug" | "Feature" | "Story"
-
 
 export type TaskProps = {
   id: string
@@ -55,10 +52,7 @@ export type TaskProps = {
   created_by: string
 }
 
-
-
-export default function TeamColumnManager({ teamId, boardId }: TeamColumnManagerProps) {
-  const [columnDialogOpen, setColumnDialogOpen] = useState(false)
+export default function TeamColumnManager({ teamId, boardId, refreshSignal }: TeamColumnManagerProps) {
   const [taskDialogOpen, setTaskDialogOpen] = useState(false)
   const [selectedColumnId, setSelectedColumnId] = useState<string | null>(null)
   const [columns, setColumns] = useState<ColumnProps[]>([])
@@ -66,7 +60,6 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
   const [activeTask, setActiveTask] = useState<TaskProps | null>(null)
   const sensors = useSensors(useSensor(PointerSensor))
   const [activeId, setActiveId] = useState<string | null>(null)
-
 
   const fetchColumns = useCallback(async () => {
     const { data, error } = await supabase
@@ -98,13 +91,12 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
   useEffect(() => {
     fetchColumns()
     fetchTasks()
-  }, [fetchColumns, fetchTasks])
+  }, [fetchColumns, fetchTasks, refreshSignal])
 
   const handleOpenCreateTask = (columnId: string) => {
     setSelectedColumnId(columnId)
     setTaskDialogOpen(true)
   }
-
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
@@ -116,12 +108,11 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
     if (!activeTask) return
 
     const overTask = tasks.find((t) => t.id === over.id)
-    const targetColumnId = overTask?.column_id || (columns.find(col => col.id === over.id)?.id)
+    const targetColumnId = overTask?.column_id || columns.find(col => col.id === over.id)?.id
 
     if (!targetColumnId) return
 
     const isSameColumn = activeTask.column_id === targetColumnId
-
     let updatedTasks: TaskProps[] = []
 
     if (isSameColumn) {
@@ -145,12 +136,10 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
           : t
       )
     } else {
-      // Remove from source
       const sourceTasks = tasks
         .filter((t) => t.column_id === activeTask.column_id && t.id !== active.id)
         .sort((a, b) => a.position - b.position)
 
-      // Insert into destination
       const destTasks = tasks
         .filter((t) => t.column_id === targetColumnId)
         .sort((a, b) => a.position - b.position)
@@ -189,7 +178,6 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
     )
   }
 
-  
   return (
     <div className="w-full p-4 bg-muted rounded">
       <DndContext
@@ -202,12 +190,6 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
         }}
         onDragCancel={() => setActiveId(null)}
       >
-        <div className="flex items-center justify-between mb-4">
-          <Button size="sm" onClick={() => setColumnDialogOpen(true)}>
-            Manage Columns
-          </Button>
-        </div>
-
         <div className="overflow-x-auto pt-2">
           <div className="flex space-x-8 min-w-max">
             {columns.map((column) => {
@@ -217,10 +199,7 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
 
               return (
                 <DroppableColumn key={column.id} columnId={column.id}>
-                  <div
-                    key={column.id}
-                    className="w-[300px] min-h-screen bg-white rounded shadow p-4 flex flex-col"
-                  >
+                  <div className="w-[300px] min-h-screen bg-white rounded shadow p-4 flex flex-col">
                     <div className="flex justify-between items-center mb-2">
                       <h3 className="text-sm font-semibold">{column.name}</h3>
                       <Button
@@ -242,8 +221,6 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
                             <span className="text-muted-foreground text-sm">No tasks</span>
                           </div>
                         )}
-
-                        {/* This dummy element ensures the SortableContext always has an item to interact with */}
                         {columnTasks.map((task) => (
                           <div id={task.id} key={task.id}>
                             <SortableTaskCard
@@ -259,14 +236,12 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
                           </div>
                         ))}
                       </div>
-
                     </SortableContext>
                   </div>
                 </DroppableColumn>
               )
             })}
           </div>
-
         </div>
 
         <DragOverlay>
@@ -285,14 +260,6 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
           })() : null}
         </DragOverlay>
       </DndContext>
-
-      <ColumnManagerDialog
-        boardId={boardId}
-        open={columnDialogOpen}
-        onOpenChange={setColumnDialogOpen}
-        onSuccess={fetchColumns}
-      />
-
 
       {selectedColumnId && (
         <CreateTaskDialog
@@ -318,4 +285,3 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
     </div>
   )
 }
-
