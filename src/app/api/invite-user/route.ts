@@ -8,12 +8,12 @@ type APIError = {
 };
 
 const throwIfError = (error: APIError | Error, status: number = 500) => {
-  console.error(error);
+  console.error(error)
   return NextResponse.json(
     { error: "message" in error ? error.message : "Unexpected error." },
     { status }
-  );
-};
+  )
+}
 
 export async function POST(request: Request) {
   try {
@@ -24,36 +24,58 @@ export async function POST(request: Request) {
 
     if (userFetchError) return throwIfError(userFetchError)
 
-    if (!users || users.length === 0) {
-      return throwIfError({ message: "User not found." }, 404)
+    let userId: string | undefined
+
+    if (users && users.length > 0) {
+      userId = users[0].id
+
+      const { data: existingMembership, error: membershipError } = await supabaseAdmin
+        .from("user_team")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("team_id", teamId)
+        .maybeSingle()
+
+      if (membershipError) return throwIfError(membershipError)
+
+      if (existingMembership) {
+        return throwIfError({ message: "User already in this team." }, 400)
+      }
+
+      const { error: insertError } = await supabaseAdmin.from("user_team").insert({
+        user_id: userId,
+        team_id: teamId,
+        role: TeamMemberRoles.USER,
+        status: TeamMemberStatus.ACTIVE,
+      })
+
+      if (insertError) return throwIfError(insertError)
+
+      return NextResponse.json({ success: true, message: "User added to team successfully." })
     }
 
-    const userId = users[0].id
+    const { data: invitedUser, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/set-password?teamId=${teamId}`,
+    })
 
-    const { data: existingMembership, error: membershipError } = await supabaseAdmin
-      .from("user_team")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("team_id", teamId)
-      .maybeSingle()
+    if (inviteError) return throwIfError(inviteError, 400)
 
-    if (membershipError) return throwIfError(membershipError)
+    userId = invitedUser.user.id
 
-    if (existingMembership) {
-      return throwIfError({ message: "User already in this team." }, 400)
+    if (!userId) {
+      return throwIfError({ message: "User ID is undefined after invitation." })
     }
 
-    const { error: insertError } = await supabaseAdmin.from("user_team").insert({
+    const { error: insertInviteError } = await supabaseAdmin.from("user_team").insert({
       user_id: userId,
       team_id: teamId,
       role: TeamMemberRoles.USER,
-      status: TeamMemberStatus.ACTIVE,
+      status: TeamMemberStatus.AWAITING,
     })
 
-    if (insertError) return throwIfError(insertError)
+    if (insertInviteError) return throwIfError(insertInviteError)
 
-    return NextResponse.json({ success: true, message: "User added to team successfully." })
-
+    return NextResponse.json({ success: true, message: "Invitation sent to new user." })
   } catch (error) {
     return throwIfError(error as Error)
   }

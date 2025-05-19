@@ -13,13 +13,13 @@ import { KanbanSquare } from "lucide-react"
 import { ROUTES } from "@/constants/routes"
 
 type TeamViewProps = {
-  teamId: string;
+  teamId: string
 }
 
 type Team = {
-  id: string;
-  name: string;
-  description: string;
+  id: string
+  name: string
+  description: string
 }
 
 export default function TeamView({ teamId }: TeamViewProps) {
@@ -31,7 +31,7 @@ export default function TeamView({ teamId }: TeamViewProps) {
     const fetchData = async () => {
       const {
         data: { user },
-        error: userError
+        error: userError,
       } = await supabase.auth.getUser()
 
       if (userError || !user) {
@@ -77,8 +77,8 @@ export default function TeamView({ teamId }: TeamViewProps) {
   return (
     <div>
       <div className="flex justify-between items-center bg-secondary text-secondary-foreground py-1 px-4 border-b w-full">
-        <div className="flex items-center w-1/2 py-1 space-x-3">
-          <Link href="/" className="text-primary hover:opacity-80 transition">
+        <div className="flex items-center space-x-3 w-1/2 py-1">
+          <Link href={ROUTES.HOME} className="text-primary hover:opacity-80 transition">
             <KanbanSquare className="w-8 h-8" />
           </Link>
           <div>
@@ -94,7 +94,9 @@ export default function TeamView({ teamId }: TeamViewProps) {
             initialName={team.name}
             initialDescription={team.description}
             onTeamUpdate={(newName, newDescription) =>
-              setTeam((prev) => prev && { ...prev, name: newName, description: newDescription })
+              setTeam((prev) =>
+                prev ? { ...prev, name: newName, description: newDescription } : prev
+              )
             }
           />
         </div>

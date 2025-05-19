@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { supabase } from "@/utils/supabase/client";
 import SetPasswordForm from "@/components/SetPasswordForm";
 import { ROUTES } from "@/constants/routes";
 import { TeamMemberStatus } from "@/types/supabaseTableData";
@@ -11,7 +11,6 @@ export default function SetPasswordView() {
   const [token, setToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const searchParams = useSearchParams();
-  const supabase = createClientComponentClient();
   const router = useRouter();
 
   const teamId = searchParams.get("teamId");
@@ -36,7 +35,9 @@ export default function SetPasswordView() {
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>]).{10,}$/;
     if (!passwordRegex.test(password)) {
-      setError("Password must be at least 10 characters, with a capital letter, lowercase letter, and special character");
+      setError(
+        "Password must be at least 10 characters, with a capital letter, lowercase letter, and special character"
+      );
       return;
     }
 
@@ -54,23 +55,32 @@ export default function SetPasswordView() {
       });
       if (sessionError) throw sessionError;
 
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
       if (userError) throw userError;
 
       const userId = user?.id;
       const email = user?.email;
       if (!email || !userId) throw new Error("User info not found");
 
-      const { error: updateError } = await supabase.auth.updateUser({ password });
+      const { error: updateError } = await supabase.auth.updateUser({
+        password,
+      });
       if (updateError) throw updateError;
 
-      const { data: { session: postUpdateSession } } = await supabase.auth.getSession();
-      if (!postUpdateSession) {
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      const {
+        data: { session: postUpdateSession },
+        error: postUpdateSessionError,
+      } = await supabase.auth.getSession();
+      if (postUpdateSessionError || !postUpdateSession) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
         if (signInError) throw signInError;
       }
-
-      console.log("userId:", userId, "teamId:", teamId);
 
       if (userId && teamId) {
         const { error: statusUpdateError } = await supabase
@@ -85,7 +95,6 @@ export default function SetPasswordView() {
       }
 
       setSuccess(true);
-
       router.push(ROUTES.TEAM_ID(teamId!));
     } catch (err: unknown) {
       const error = err as Error;
