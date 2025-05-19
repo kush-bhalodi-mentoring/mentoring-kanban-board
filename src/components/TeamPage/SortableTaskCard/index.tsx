@@ -1,30 +1,25 @@
-import { useSortable } from "@dnd-kit/sortable"
+import { GripVertical } from "lucide-react"
 import { CSS } from "@dnd-kit/utilities"
-import TaskCard from "@/components/TeamPage/TaskCard"
-import type { TaskProps } from "../TeamColumnManager"
+import { useSortable } from "@dnd-kit/sortable"
+import { cn } from "@/lib/utils"
+import TaskCard from "../TaskCard"
 
-type SortableTaskCardProps = {
-  task: TaskProps
+type Props = {
+  task: any
   teamId: string
   open: boolean
-  onOpenChange: () => void
+  onOpenChange: (open: boolean) => void
   onSuccess: () => void
 }
 
-export default function SortableTaskCard({
-  task,
-  teamId,
-  open,
-  onOpenChange,
-  onSuccess,
-}: SortableTaskCardProps) {
+export default function SortableTaskCard(props: Props) {
   const {
     attributes,
     listeners,
     setNodeRef,
     transform,
     transition,
-  } = useSortable({ id: task.id })
+  } = useSortable({ id: props.task.id })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -32,14 +27,23 @@ export default function SortableTaskCard({
   }
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <TaskCard
-        task={task}
-        teamId={teamId}
-        open={open}
-        onOpenChange={onOpenChange}
-        onSuccess={onSuccess}
-      />
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="relative"
+    >
+      <TaskCard {...props}>
+        <div
+          {...attributes}
+          {...listeners}
+          className={cn(
+            "absolute top-2 right-2 cursor-grab p-1 rounded bg-muted hover:bg-muted/70"
+          )}
+          onClick={(e) => e.stopPropagation()} // prevent opening dialog
+        >
+          <GripVertical className="w-4 h-4 text-muted-foreground" />
+        </div>
+      </TaskCard>
     </div>
   )
 }

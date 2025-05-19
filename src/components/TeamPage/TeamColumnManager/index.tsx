@@ -53,6 +53,8 @@ export type TaskProps = {
   created_by: string
 }
 
+
+
 export default function TeamColumnManager({ teamId, boardId }: TeamColumnManagerProps) {
   const [isAdmin, setIsAdmin] = useState(false)
   const [columnDialogOpen, setColumnDialogOpen] = useState(false)
@@ -238,18 +240,32 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
                     items={columnTasks.map((task) => task.id)}
                     strategy={verticalListSortingStrategy}
                   >
-                    <div className="flex flex-col space-y-4">
-                      {columnTasks.map((task) => (
-                        <div id={task.id} key={task.id}>
-                          <SortableTaskCard
-                            task={task}
-                            teamId={teamId}
-                            open={!!activeTask && activeTask.id === task.id}
-                            onOpenChange={() => setActiveTask(null)}
-                            onSuccess={() => setActiveTask(task)}
-                          />
+                    <div className="flex flex-col space-y-4 min-h-[50px]">
+                      {columnTasks.length === 0 ? (
+                        <div
+                          className="border rounded bg-muted text-muted-foreground text-center py-4 px-2 text-sm select-none pointer-events-none"
+                        >
+                          No tasks
                         </div>
-                      ))}
+                      ) : (
+                        columnTasks.map((task) => (
+                          <div id={task.id} key={task.id}>
+                            <SortableTaskCard
+                              task={task}
+                              teamId={teamId}
+                              open={!!activeTask && activeTask.id === task.id}
+                              onOpenChange={(open) => {
+                                if (open) {
+                                  setActiveTask(task)
+                                } else {
+                                  setActiveTask(null)
+                                }
+                              }}
+                              onSuccess={fetchTasks}
+                            />
+                          </div>
+                        ))
+                      )}
                     </div>
                   </SortableContext>
                 </div>
