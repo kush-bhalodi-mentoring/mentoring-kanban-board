@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { supabase } from "@/utils/supabase/client"
 import { DB_TABLE_NAMES as TABLE } from "@/constants/databaseTableNames"
 import TeamToolbar from "@/components/TeamPage/TeamToolbar"
 import { TeamSwitcher } from "@/components/TeamPage/TeamSwitch/TeamSwitcher"
 import TeamBoardManager from "@/components/TeamBoardManager"
 import { toast } from "sonner"
+import { KanbanSquare } from "lucide-react"
+import { ROUTES } from "@/constants/routes"
 
 type TeamViewProps = {
   teamId: string;
@@ -33,7 +36,7 @@ export default function TeamView({ teamId }: TeamViewProps) {
 
       if (userError || !user) {
         toast.error("Unable to find user session.")
-        router.replace("/")
+        router.replace(ROUTES.HOME)
         return
       }
 
@@ -46,7 +49,7 @@ export default function TeamView({ teamId }: TeamViewProps) {
 
       if (userTeamError || !userTeam || userTeam.status !== "ACTIVE") {
         toast.error("No access to this team.")
-        router.replace("/")
+        router.replace(ROUTES.HOME)
         return
       }
 
@@ -74,10 +77,16 @@ export default function TeamView({ teamId }: TeamViewProps) {
   return (
     <div>
       <div className="flex justify-between items-center bg-secondary text-secondary-foreground py-1 px-4 border-b w-full">
-        <div className="flex flex-col w-1/2 py-1">
-          <h1 className="text-xl font-semibold text-foreground">{team.name}</h1>
-          <p className="text-sm text-muted-foreground">{team.description}</p>
+        <div className="flex items-center w-1/2 py-1 space-x-3">
+          <Link href="/" className="text-primary hover:opacity-80 transition">
+            <KanbanSquare className="w-8 h-8" />
+          </Link>
+          <div>
+            <h1 className="text-xl font-semibold text-foreground">{team.name}</h1>
+            <p className="text-sm text-muted-foreground">{team.description}</p>
+          </div>
         </div>
+
         <div className="flex items-end space-x-2 py-1">
           <TeamSwitcher currentTeamId={teamId} />
           <TeamToolbar
