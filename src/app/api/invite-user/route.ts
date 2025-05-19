@@ -8,7 +8,7 @@ type APIError = {
 };
 
 const throwIfError = (error: APIError | Error, status: number = 500) => {
-  console.error(error);
+  console.error("API Error:", error);
   return NextResponse.json(
     { error: "message" in error ? error.message : "Unexpected error." },
     { status }
@@ -54,8 +54,6 @@ export async function POST(request: Request) {
 
       const magicLink = data?.properties?.action_link
 
-      console.log("Generated magic link:", magicLink)
-
       if (!magicLink) {
         return throwIfError({ message: "Magic link not generated." })
       }
@@ -69,9 +67,15 @@ export async function POST(request: Request) {
 
       if (insertError) return throwIfError(insertError)
 
-      return NextResponse.json({ success: true, message: "Magic link sent to existing user." })
+      // Return magic link in response
+      return NextResponse.json({
+        success: true,
+        message: "Magic link generated for existing user.",
+        magicLink,
+      })
     }
 
+    // If no existing user, send regular invite
     const { data: invitedUser, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
       redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/set-password?teamId=${teamId}`,
     })
@@ -93,7 +97,10 @@ export async function POST(request: Request) {
 
     if (insertInviteError) return throwIfError(insertInviteError)
 
-    return NextResponse.json({ success: true, message: "Invitation sent to new user." })
+    return NextResponse.json({
+      success: true,
+      message: "Invitation sent to new user.",
+    })
   } catch (error) {
     return throwIfError(error as Error)
   }

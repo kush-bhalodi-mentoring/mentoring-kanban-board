@@ -15,13 +15,37 @@ export default function JoinTeam() {
 
   useEffect(() => {
     const activateAndRedirect = async () => {
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      const hashParams = new URLSearchParams(window.location.hash.substring(1))
+      const accessToken = hashParams.get('access_token')
+      const refreshToken = hashParams.get('refresh_token')
 
-      if (userError || !user) {
-        setError('Unable to find user session.')
+      if (!accessToken || !refreshToken) {
+        setError('Missing token in URL.')
         setLoading(false)
         return
       }
+
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      })
+
+      if (sessionError) {
+        console.error('Failed to set session.')
+        setError('Failed to set session.')
+        setLoading(false)
+        return
+      }
+
+      const { data: userData, error: userError } = await supabase.auth.getUser()
+
+      if (userError || !userData.user) {
+        setError('Unable to find user session after setting it.')
+        setLoading(false)
+        return
+      }
+
+      const user = userData.user
 
       if (!teamId) {
         setError('Missing team information.')
@@ -36,6 +60,7 @@ export default function JoinTeam() {
         .eq('team_id', teamId)
 
       if (updateError) {
+        console.error('Failed to update team membership status.')
         setError('Failed to join team.')
         setLoading(false)
         return
