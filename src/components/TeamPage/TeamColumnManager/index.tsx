@@ -127,43 +127,77 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
     const { active, over } = event
     if (!over || active.id === over.id) return
 
-    const activeTask = tasks.find(task => task.id === active.id)
-    const overTask = tasks.find(task => task.id === over.id)
-
+    const activeTask = tasks.find((task) => task.id === active.id)
+    const overTask = tasks.find((task) => task.id === over.id)
     if (!activeTask || !overTask) return
 
-    // Check if they are in the same column
     const isSameColumn = activeTask.column_id === overTask.column_id
-    const columnTasks = tasks
-      .filter(t => t.column_id === activeTask.column_id)
-      .sort((a, b) => a.position - b.position)
+    const newColumnId = overTask.column_id
 
-    const oldIndex = columnTasks.findIndex(t => t.id === active.id)
-    const newIndex = columnTasks.findIndex(t => t.id === over.id)
+    let updatedTasks: TaskProps[] = []
 
-    if (oldIndex === -1 || newIndex === -1) return
+    if (isSameColumn) {
+      // Get tasks in the same column
+      const columnTasks = tasks
+        .filter((t) => t.column_id === activeTask.column_id)
+        .sort((a, b) => a.position - b.position)
 
-    const reordered = arrayMove(columnTasks, oldIndex, newIndex)
+      const oldIndex = columnTasks.findIndex((t) => t.id === active.id)
+      const newIndex = columnTasks.findIndex((t) => t.id === over.id)
 
-    // Update positions locally
-    const updatedTasks = tasks.map(task => {
-      const reorderedTask = reordered.find(t => t.id === task.id)
-      return reorderedTask
-        ? { ...task, position: reordered.indexOf(reorderedTask) }
-        : task
-    })
+      const reordered = arrayMove(columnTasks, oldIndex, newIndex).map((t, idx) => ({
+        ...t,
+        position: idx,
+      }))
+
+      // Update full task list
+      updatedTasks = tasks.map((t) => {
+        if (t.column_id !== activeTask.column_id) return t
+        return reordered.find((rt) => rt.id === t.id) || t
+      })
+
+    } else {
+      // Moving to another column
+      const sourceTasks = tasks
+        .filter((t) => t.column_id === activeTask.column_id && t.id !== activeTask.id)
+        .sort((a, b) => a.position - b.position)
+
+      const destTasks = tasks
+        .filter((t) => t.column_id === overTask.column_id)
+        .sort((a, b) => a.position - b.position)
+
+      const insertIndex = destTasks.findIndex((t) => t.id === over.id)
+
+      const newDestTasks = [
+        ...destTasks.slice(0, insertIndex),
+        { ...activeTask, column_id: newColumnId },
+        ...destTasks.slice(insertIndex),
+      ]
+
+      const updatedSource = sourceTasks.map((t, i) => ({ ...t, position: i }))
+      const updatedDest = newDestTasks.map((t, i) => ({ ...t, position: i }))
+
+      updatedTasks = [
+        ...tasks.filter(
+          (t) => t.column_id !== activeTask.column_id && t.column_id !== newColumnId
+        ),
+        ...updatedSource,
+        ...updatedDest,
+      ]
+    }
 
     setTasks(updatedTasks)
 
-    // Persist changes to Supabase
-    for (let i = 0; i < reordered.length; i++) {
-      const task = reordered[i]
-      await supabase
-        .from("tasks")
-        .update({ position: i })
-        .eq("id", task.id)
-    }
+    await Promise.all(
+      updatedTasks.map((t) =>
+        supabase
+          .from("tasks")
+          .update({ column_id: t.column_id, position: t.position })
+          .eq("id", t.id)
+      )
+    )
   }
+
   
   return (
     <div className="w-full p-4 bg-muted rounded">
@@ -204,14 +238,15 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
                   >
                     <div className="flex flex-col space-y-4">
                       {columnTasks.map((task) => (
-                        <SortableTaskCard
-                          key={task.id}
-                          task={task}
-                          teamId={teamId}
-                          open={!!activeTask && activeTask.id === task.id}
-                          onOpenChange={() => setActiveTask(null)}
-                          onSuccess={() => setActiveTask(task)}
-                        />
+                        <div id={task.id} key={task.id}>
+                          <SortableTaskCard
+                            task={task}
+                            teamId={teamId}
+                            open={!!activeTask && activeTask.id === task.id}
+                            onOpenChange={() => setActiveTask(null)}
+                            onSuccess={() => setActiveTask(task)}
+                          />
+                        </div>
                       ))}
                     </div>
                   </SortableContext>
