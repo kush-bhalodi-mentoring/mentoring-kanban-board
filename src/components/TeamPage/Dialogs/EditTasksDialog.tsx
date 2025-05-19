@@ -10,7 +10,7 @@ import { supabase } from "@/utils/supabase/client"
 import DatePicker from "react-datepicker"
 import { Editor } from "@tinymce/tinymce-react"
 import type { Editor as TinyMCEEditor } from "tinymce"
-
+import { DB_TABLE_NAMES as TABLE } from "@/constants/databaseTableNames"
 import "react-datepicker/dist/react-datepicker.css"
 
 type Props = {
@@ -24,19 +24,29 @@ type Props = {
     position: number
     estimation?: number
     created_by: string
+    column_id: string 
   }
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess: () => void
   teamId: string
+  boardId: string
 }
 
 type TaskType = 'Bug' | 'Feature' | 'Story'
 
-export default function EditTaskDialog({ task, open, onOpenChange, onSuccess, teamId }: Props) {
+
+
+export default function EditTaskDialog({ 
+  task, 
+  open, 
+  onOpenChange, 
+  onSuccess, 
+  teamId, 
+  boardId 
+}: Props) {
   const [editedTitle, setEditedTitle] = useState(task.title)
   const [isEditingTitle, setIsEditingTitle] = useState(false)
-
   const defaultType: TaskType = ['Bug', 'Feature', 'Story'].includes(task.type as TaskType)
     ? (task.type as TaskType)
     : 'Bug'
@@ -49,6 +59,24 @@ export default function EditTaskDialog({ task, open, onOpenChange, onSuccess, te
   const [description, setDescription] = useState(task.description || "")
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const editorRef = useRef<TinyMCEEditor | null>(null)
+  const [columnId, setColumnId] = useState(task.column_id)
+  const [columns, setColumns] = useState<{ id: string; name: string }[]>([])
+
+  
+  useEffect(() => {
+    const fetchColumns = async () => {
+      const { data, error } = await supabase
+        .from(TABLE.COLUMNS)
+        .select("id, name")
+        .eq("board_id", boardId)
+
+      if (!error && data) {
+        setColumns(data)
+      }
+    }
+
+    if (open) fetchColumns()
+  }, [boardId, open])
 
   useEffect(() => {
     setEditedTitle(task.title)
@@ -82,6 +110,7 @@ export default function EditTaskDialog({ task, open, onOpenChange, onSuccess, te
         type: editedType,
         assigned_to: assignedTo || null,
         due_date: dueDate?.toISOString() ?? null,
+        column_id: columnId, 
       })
       .eq("id", task.id)
 
@@ -216,6 +245,22 @@ export default function EditTaskDialog({ task, open, onOpenChange, onSuccess, te
                 placeholderText="Pick a date"
                 className="w-full rounded-md border px-3 py-2 text-sm"
               />
+            </div>
+
+            <div>
+              <p className="text-sm font-medium mb-1">Column</p>
+              <Select value={columnId} onValueChange={setColumnId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select column" />
+                </SelectTrigger>
+                <SelectContent>
+                  {columns.map((col) => (
+                    <SelectItem key={col.id} value={col.id}>
+                      {col.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
