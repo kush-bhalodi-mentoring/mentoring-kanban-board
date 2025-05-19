@@ -29,9 +29,13 @@ type BoardFormData = z.infer<typeof BoardSchema>;
 
 type TeamBoardManagerProps = {
   setBoardName: (name: string | null) => void;
+  setBoardId: (id: string | null) => void;
 };
 
-export default function TeamBoardManager({ setBoardName }: TeamBoardManagerProps) {
+export default function TeamBoardManager({
+  setBoardName,
+  setBoardId,
+}: TeamBoardManagerProps) {
   const { teamId } = useParams<{ teamId: string }>();
   const [board, setBoard] = useState<Boards | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -82,13 +86,14 @@ export default function TeamBoardManager({ setBoardName }: TeamBoardManagerProps
       } else {
         setBoard(boardData);
         setBoardName(boardData?.name || null);
+        setBoardId(boardData?.id || null);
       }
 
       setLoading(false);
     };
 
     fetchData();
-  }, [teamId, setBoardName]);
+  }, [teamId, setBoardName, setBoardId]);
 
   const handleCreateBoard = async (data: BoardFormData) => {
     const {
@@ -101,82 +106,88 @@ export default function TeamBoardManager({ setBoardName }: TeamBoardManagerProps
       return;
     }
 
-    const { error } = await supabase.from("boards").insert([
-      {
-        team_id: teamId,
-        name: data.name,
-        description: data.description,
-        created_by: userData.user.id,
-      },
-    ]);
+    const { data: inserted, error } = await supabase
+      .from("boards")
+      .insert([
+        {
+          team_id: teamId,
+          name: data.name,
+          description: data.description,
+          created_by: userData.user.id,
+        },
+      ])
+      .select("*")
+      .single();
 
     if (error) {
       toast.error("Failed to create board");
     } else {
       toast.success("Board created!");
-      const newBoard = {
-        id: "",
-        team_id: teamId,
-        name: data.name,
-        description: data.description,
-        created_by: userData.user.id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setBoard(newBoard);
-      setBoardName(newBoard.name);
+      setBoard(inserted);
+      setBoardName(inserted.name);
+      setBoardId(inserted.id);
     }
   };
 
-  if (loading) return <p>Loading board info...</p>;
+  if (loading) return null;
+
+  if (board) return null;
+
+  if (!isAdmin) {
+    return (
+      <p className="text-muted-foreground px-4">
+        No board has been created for this team yet.
+      </p>
+    );
+  }
 
   return (
     <Card className="w-full text-left rounded-none mb-0">
       <CardContent className="px-4 space-y-4">
-        {board ? null : isAdmin ? (
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(handleCreateBoard)}
-              className="space-y-4"
-            >
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Board Name</FormLabel>
-                    <FormControl>
-                      <Input className="w-1/3" placeholder="Team Roadmap" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Input
-                        className="w-1/3"
-                        placeholder="Project planning and task board"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-1/3">
-                Create Board
-              </Button>
-            </form>
-          </Form>
-        ) : (
-          <p className="text-muted-foreground">No board has been created for this team yet.</p>
-        )}
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleCreateBoard)}
+            className="space-y-4"
+          >
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Board Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      className="w-1/3"
+                      placeholder="Team Roadmap"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Input
+                      className="w-1/3"
+                      placeholder="Project planning and task board"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="w-1/3">
+              Create Board
+            </Button>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );

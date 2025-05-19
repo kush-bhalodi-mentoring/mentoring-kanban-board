@@ -18,7 +18,7 @@ type Props = {
     position: number
     estimation?: number
     created_by: string
-    created_by_email?: string | null
+    column_id: string 
   }
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -37,9 +37,16 @@ async function fetchUserEmail(userId: string): Promise<string | null> {
   return data[0].email
 }
 
+type TaskCardProps = Props & {
+  children?: React.ReactNode
+}
 
-
-export default function TaskCard({ task, onSuccess }: Props) {
+export default function TaskCard({
+  task,
+  onSuccess,
+  onOpenChange,
+  children,
+}: TaskCardProps) {
   const [createdByEmail, setCreatedByEmail] = useState<string | null>(null)
   const typeStyleMap: Record<TaskType, string> = {
     Bug: "bg-red-100 text-red-600 border-red-200",
@@ -47,7 +54,7 @@ export default function TaskCard({ task, onSuccess }: Props) {
     Story: "bg-blue-100 text-blue-700 border-blue-200",
   }
 
-   useEffect(() => {
+  useEffect(() => {
     async function getEmail() {
       if (!task.created_by) return
       const email = await fetchUserEmail(task.created_by)
@@ -55,19 +62,24 @@ export default function TaskCard({ task, onSuccess }: Props) {
     }
     getEmail()
   }, [task.created_by])
- 
+
+  const handleClick = () => {
+    onSuccess?.()
+    onOpenChange?.(true)
+  }
+
   return (
     <div
       className={cn(
-        "rounded-md border bg-card p-3 shadow-sm hover:shadow-md transition cursor-pointer",
+        "rounded-md border bg-card p-3 shadow-sm hover:shadow-md transition cursor-pointer relative",
         "flex flex-col gap-2"
       )}
-      onClick={onSuccess}
+      onClick={handleClick}
     >
+      {children && <div className="absolute top-2 right-2">{children}</div>}
+
       <div className="flex items-center justify-between text-sm font-medium text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <span className="text-foreground line-clamp-2">{task.title}</span>
-        </div>
+        <span className="text-foreground line-clamp-2">{task.title}</span>
         {task.estimation !== null && (
           <div className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold">
             {task.estimation}
@@ -75,7 +87,6 @@ export default function TaskCard({ task, onSuccess }: Props) {
         )}
       </div>
 
-      
       <div className="flex gap-2 flex-wrap">
         <Badge
           variant="outline"
@@ -89,8 +100,7 @@ export default function TaskCard({ task, onSuccess }: Props) {
       </div>
 
       <div className="flex justify-end">
-        
-         {createdByEmail && (
+        {createdByEmail && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>

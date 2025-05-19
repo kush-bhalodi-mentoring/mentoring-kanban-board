@@ -72,7 +72,6 @@ function SortableItem({
       style={style}
       className="flex items-center gap-2 bg-muted p-2 rounded"
     >
-      {/* Drag handle */}
       <button
         ref={setActivatorNodeRef}
         {...attributes}
@@ -82,7 +81,6 @@ function SortableItem({
         <GripVertical className="w-4 h-4 text-muted-foreground" />
       </button>
 
-      {/* Column input */}
       <Input
         placeholder={`Column ${index + 1}`}
         value={column.name}
@@ -113,22 +111,46 @@ export default function ColumnManagerDialog({ boardId, open, onOpenChange, onSuc
       { id: uuidv4(), name: "In Progress", position: 1, boardId },
       { id: uuidv4(), name: "Done", position: 2, boardId },
     ]
-    const fetchColumns = async () => {
-      const { data } = await supabase
+
+    const fetchAndInitializeColumns = async () => {
+      const { data, error } = await supabase
         .from(TABLE.COLUMNS)
         .select("*")
         .eq("board_id", boardId)
         .order("position", { ascending: true })
 
+      if (error) {
+        toast.error("Failed to fetch columns")
+        return
+      }
+
       if (data && data.length > 0) {
         setColumns(data)
       } else {
+        const insertData = DEFAULT_COLUMNS.map((col, index) => ({
+          id: col.id,
+          name: col.name,
+          board_id: boardId,
+          position: index + 1,
+        }))
+
+        const { error: insertError } = await supabase
+          .from(TABLE.COLUMNS)
+          .insert(insertData)
+
+        if (insertError) {
+          toast.error("Failed to initialize default columns")
+          return
+        }
+
         setColumns(DEFAULT_COLUMNS)
+        toast.success("Default columns added")
       }
     }
 
-    if (open) fetchColumns()
+    if (open) fetchAndInitializeColumns()
   }, [open, boardId])
+
 
   const handleAdd = () => {
     setColumns((prev) => [

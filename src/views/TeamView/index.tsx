@@ -1,44 +1,46 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { supabase } from "@/utils/supabase/client";
-import { DB_TABLE_NAMES as TABLE } from "@/constants/databaseTableNames";
-import TeamToolbar from "@/components/TeamPage/TeamToolbar";
-import { TeamSwitcher } from "@/components/TeamPage/TeamSwitch/TeamSwitcher";
-import TeamBoardManager from "@/components/TeamBoardManager";
-import { toast } from "sonner";
-import { KanbanSquare } from "lucide-react";
-import { ROUTES } from "@/constants/routes";
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { supabase } from "@/utils/supabase/client"
+import { DB_TABLE_NAMES as TABLE } from "@/constants/databaseTableNames"
+import TeamToolbar from "@/components/TeamPage/TeamToolbar"
+import { TeamSwitcher } from "@/components/TeamPage/TeamSwitch/TeamSwitcher"
+import TeamBoardManager from "@/components/TeamBoardManager"
+import { toast } from "sonner"
+import TeamColumnManager from "@/components/TeamPage/TeamColumnManager"
+import { KanbanSquare } from "lucide-react"
+import { ROUTES } from "@/constants/routes"
 
 type TeamViewProps = {
-  teamId: string;
-};
+  teamId: string
+}
 
 type Team = {
-  id: string;
-  name: string;
-  description: string;
-};
+  id: string
+  name: string
+  description: string
+}
 
 export default function TeamView({ teamId }: TeamViewProps) {
-  const [team, setTeam] = useState<Team | null>(null);
-  const [boardName, setBoardName] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const [team, setTeam] = useState<Team | null>(null)
+  const [boardId, setBoardId] = useState<string | null>(null)
+  const [boardName, setBoardName] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
     const fetchData = async () => {
       const {
         data: { user },
         error: userError,
-      } = await supabase.auth.getUser();
+      } = await supabase.auth.getUser()
 
       if (userError || !user) {
-        toast.error("Unable to find user session.");
-        router.replace(ROUTES.HOME);
-        return;
+        toast.error("Unable to find user session.")
+        router.replace(ROUTES.HOME)
+        return
       }
 
       const { data: userTeam, error: userTeamError } = await supabase
@@ -46,47 +48,48 @@ export default function TeamView({ teamId }: TeamViewProps) {
         .select("status")
         .eq("team_id", teamId)
         .eq("user_id", user.id)
-        .maybeSingle();
+        .maybeSingle()
 
       if (userTeamError || !userTeam || userTeam.status !== "ACTIVE") {
-        toast.error("No access to this team.");
-        router.replace(ROUTES.HOME);
-        return;
+        toast.error("Failed to access to team page.")
+        router.replace(ROUTES.HOME)
+        return
       }
 
       const { data, error } = await supabase
         .from(TABLE.TEAMS)
         .select("*")
         .eq("id", teamId)
-        .single();
+        .single()
 
       if (error) {
-        console.error("Failed to fetch team", error);
+        console.error("Failed to fetch team", error)
       } else {
-        setTeam(data);
+        setTeam(data)
       }
 
       const { data: boardData, error: boardError } = await supabase
-        .from("boards")
-        .select("name")
+        .from(TABLE.BOARDS)
+        .select("id, name")
         .eq("team_id", teamId)
-        .single();
+        .single()
 
-      if (!boardError) {
-        setBoardName(boardData?.name || null);
+      if (!boardError && boardData) {
+        setBoardId(boardData.id)
+        setBoardName(boardData.name)
       }
 
-      setLoading(false);
-    };
+      setLoading(false)
+    }
 
-    fetchData();
-  }, [teamId, router]);
+    fetchData()
+  }, [teamId, router])
 
-  if (loading) return <div className="p-6">Loading...</div>;
-  if (!team) return <div className="p-6">Team not found.</div>;
+  if (loading) return <div className="p-6">Loading...</div>
+  if (!team) return <div className="p-6">Team not found.</div>
 
   return (
-    <div>
+    <div className="bg-secondary text-secondary-foreground min-h-screen flex flex-col">
       <div className="flex flex-col gap-2 bg-secondary text-secondary-foreground py-2 px-4 border-b w-full">
         <div className="flex items-center gap-3">
           <Link
@@ -106,6 +109,7 @@ export default function TeamView({ teamId }: TeamViewProps) {
             )}
           </div>
         </div>
+
         <div className="overflow-x-auto scrollbar-hide">
           <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap">
             <TeamSwitcher currentTeamId={teamId} />
@@ -124,8 +128,12 @@ export default function TeamView({ teamId }: TeamViewProps) {
       </div>
 
       <div className="space-y-6">
-        <TeamBoardManager setBoardName={setBoardName} />
+        <TeamBoardManager
+          setBoardName={setBoardName}
+          setBoardId={setBoardId}
+        />
+        {boardId && <TeamColumnManager teamId={teamId} boardId={boardId} />}
       </div>
     </div>
-  );
+  )
 }
