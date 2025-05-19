@@ -237,31 +237,30 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
                       items={columnTasks.map((task) => task.id)}
                       strategy={verticalListSortingStrategy}
                     >
-                      <div className="flex flex-col space-y-4 min-h-[50px]">
-                        {columnTasks.length === 0 ? (
-                          <div className="border rounded bg-muted text-muted-foreground text-center py-4 px-2 text-sm select-none pointer-events-none">
-                            No tasks
+                      <div className="flex flex-col space-y-4 min-h-[100px] relative">
+                        {columnTasks.length === 0 && (
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <span className="text-muted-foreground text-sm">No tasks</span>
                           </div>
-                        ) : (
-                          columnTasks.map((task) => (
-                            <div id={task.id} key={task.id}>
-                              <SortableTaskCard
-                                task={task}
-                                teamId={teamId}
-                                open={!!activeTask && activeTask.id === task.id}
-                                onOpenChange={(open) => {
-                                  if (open) {
-                                    setActiveTask(task)
-                                  } else {
-                                    setActiveTask(null)
-                                  }
-                                }}
-                                onSuccess={fetchTasks}
-                              />
-                            </div>
-                          ))
                         )}
+
+                        {/* This dummy element ensures the SortableContext always has an item to interact with */}
+                        {columnTasks.map((task) => (
+                          <div id={task.id} key={task.id}>
+                            <SortableTaskCard
+                              task={task}
+                              teamId={teamId}
+                              open={!!activeTask && activeTask.id === task.id}
+                              onOpenChange={(open) => {
+                                if (open) setActiveTask(task)
+                                else setActiveTask(null)
+                              }}
+                              onSuccess={fetchTasks}
+                            />
+                          </div>
+                        ))}
                       </div>
+
                     </SortableContext>
                   </div>
                 </DroppableColumn>
