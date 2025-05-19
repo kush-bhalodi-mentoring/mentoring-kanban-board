@@ -39,34 +39,12 @@ type TaskProps = {
 }
 
 export default function TeamColumnManager({ teamId, boardId }: TeamColumnManagerProps) {
-  const [isAdmin, setIsAdmin] = useState(false)
   const [columnDialogOpen, setColumnDialogOpen] = useState(false)
   const [taskDialogOpen, setTaskDialogOpen] = useState(false)
   const [selectedColumnId, setSelectedColumnId] = useState<string | null>(null)
   const [columns, setColumns] = useState<ColumnProps[]>([])
   const [tasks, setTasks] = useState<TaskProps[]>([])
   const [activeTask, setActiveTask] = useState<TaskProps | null>(null)
-
-  useEffect(() => {
-    const checkAdmin = async () => {
-      const { data: userData } = await supabase.auth.getUser()
-      const userId = userData?.user?.id
-      if (!userId) return
-
-      const { data, error } = await supabase
-        .from(TABLE.USER_TEAM)
-        .select("role")
-        .eq("user_id", userId)
-        .eq("team_id", teamId)
-        .single()
-
-      if (!error && data?.role === "Admin") {
-        setIsAdmin(true)
-      }
-    }
-
-    checkAdmin()
-  }, [teamId])
 
   const fetchColumns = useCallback(async () => {
     const { data, error } = await supabase
@@ -100,8 +78,6 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
     fetchTasks()
   }, [fetchColumns, fetchTasks])
 
-  if (!isAdmin) return null
-
   const handleOpenCreateTask = (columnId: string) => {
     setSelectedColumnId(columnId)
     setTaskDialogOpen(true)
@@ -114,6 +90,7 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
         <Button size="sm" onClick={() => setColumnDialogOpen(true)}>
           Manage Columns
         </Button>
+        
       </div>
 
       <div className="overflow-x-auto pt-2">
@@ -151,8 +128,7 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
                         setActiveTask(task)
                       }}
                     />
-                ))}
-
+                  ))}
               </div>
             </div>
           ))}
@@ -165,6 +141,7 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
         onOpenChange={setColumnDialogOpen}
         onSuccess={fetchColumns}
       />
+
 
       {selectedColumnId && (
         <CreateTaskDialog
@@ -189,3 +166,4 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
     </div>
   )
 }
+
