@@ -39,7 +39,6 @@ type TaskProps = {
 }
 
 export default function TeamColumnManager({ teamId, boardId }: TeamColumnManagerProps) {
-  const [isAdmin, setIsAdmin] = useState(false)
   const [columnDialogOpen, setColumnDialogOpen] = useState(false)
   const [taskDialogOpen, setTaskDialogOpen] = useState(false)
   const [selectedColumnId, setSelectedColumnId] = useState<string | null>(null)
@@ -59,10 +58,6 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
         .eq("user_id", userId)
         .eq("team_id", teamId)
         .single()
-
-      if (!error && data?.role === "Admin") {
-        setIsAdmin(true)
-      }
     }
 
     checkAdmin()
@@ -109,11 +104,10 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
     <div className="w-full p-4 bg-muted rounded">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-semibold text-muted-foreground">Board Columns</h2>
-        {isAdmin && (
-          <Button size="sm" onClick={() => setColumnDialogOpen(true)}>
-            Manage Columns
-          </Button>
-        )}
+        <Button size="sm" onClick={() => setColumnDialogOpen(true)}>
+          Manage Columns
+        </Button>
+        
       </div>
 
       <div className="overflow-x-auto pt-2">
@@ -158,14 +152,13 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
         </div>
       </div>
 
-      {isAdmin && (
-        <ColumnManagerDialog
-          boardId={boardId}
-          open={columnDialogOpen}
-          onOpenChange={setColumnDialogOpen}
-          onSuccess={fetchColumns}
-        />
-      )}
+      <ColumnManagerDialog
+        boardId={boardId}
+        open={columnDialogOpen}
+        onOpenChange={setColumnDialogOpen}
+        onSuccess={fetchColumns}
+      />
+
 
       {selectedColumnId && (
         <CreateTaskDialog
