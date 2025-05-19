@@ -11,9 +11,7 @@ import DatePicker from "react-datepicker"
 import { Editor } from "@tinymce/tinymce-react"
 import type { Editor as TinyMCEEditor } from "tinymce"
 import { DB_TABLE_NAMES as TABLE } from "@/constants/databaseTableNames"
-
 import "react-datepicker/dist/react-datepicker.css"
-import { Table } from "lucide-react"
 
 type Props = {
   task: {
@@ -78,7 +76,7 @@ export default function EditTaskDialog({
     }
 
     if (open) fetchColumns()
-  }, [teamId, open])
+  }, [boardId, open])
 
   useEffect(() => {
     setEditedTitle(task.title)

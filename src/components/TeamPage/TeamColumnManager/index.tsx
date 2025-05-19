@@ -25,7 +25,6 @@ import {
 } from "@dnd-kit/sortable"
 import SortableTaskCard from "../SortableTaskCard" 
 import DroppableColumn from "@/components/TeamPage/DroppableColumn"
-import { Columns } from "lucide-react"
 
 
 type TeamColumnManagerProps = {
@@ -116,7 +115,6 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
     const activeTask = tasks.find((t) => t.id === active.id)
     if (!activeTask) return
 
-    // If over is a column (drop on empty column), find the column directly
     const overTask = tasks.find((t) => t.id === over.id)
     const targetColumnId = overTask?.column_id || (columns.find(col => col.id === over.id)?.id)
 
