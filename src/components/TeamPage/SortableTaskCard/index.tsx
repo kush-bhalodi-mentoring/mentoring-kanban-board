@@ -3,9 +3,10 @@ import { CSS } from "@dnd-kit/utilities"
 import { useSortable } from "@dnd-kit/sortable"
 import { cn } from "@/lib/utils"
 import TaskCard from "../TaskCard"
+import type { TaskProps } from "../TeamColumnManager"
 
 type Props = {
-  task: any
+  task: TaskProps
   teamId: string
   open: boolean
   onOpenChange: (open: boolean) => void

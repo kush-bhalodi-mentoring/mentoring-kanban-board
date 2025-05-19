@@ -37,8 +37,6 @@ async function fetchUserEmail(userId: string): Promise<string | null> {
   return data[0].email
 }
 
-
-
 type TaskCardProps = Props & {
   children?: React.ReactNode
 }

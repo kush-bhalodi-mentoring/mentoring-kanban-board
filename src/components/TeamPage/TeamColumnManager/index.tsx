@@ -48,7 +48,7 @@ export type TaskProps = {
   description: string | null
   column_id: string
   due_date: string | null
-  type: TaskType         // <- changed from string to TaskType
+  type: TaskType         
   position: number
   assigned_to: string
   estimation?: number
