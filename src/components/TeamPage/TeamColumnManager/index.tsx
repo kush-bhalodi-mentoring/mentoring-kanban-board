@@ -16,6 +16,7 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragOverlay,
 } from "@dnd-kit/core"
 import {
   SortableContext,
@@ -64,6 +65,7 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
   const [tasks, setTasks] = useState<TaskProps[]>([])
   const [activeTask, setActiveTask] = useState<TaskProps | null>(null)
   const sensors = useSensors(useSensor(PointerSensor))
+  const [activeId, setActiveId] = useState<string | null>(null)
 
 
   useEffect(() => {
@@ -205,7 +207,16 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
   
   return (
     <div className="w-full p-4 bg-muted rounded">
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={(event) => setActiveId(event.active.id as string)}
+        onDragEnd={(event) => {
+          setActiveId(null)
+          handleDragEnd(event)
+        }}
+        onDragCancel={() => setActiveId(null)}
+      >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-muted-foreground">Board Columns</h2>
           <Button size="sm" onClick={() => setColumnDialogOpen(true)}>
@@ -242,9 +253,7 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
                   >
                     <div className="flex flex-col space-y-4 min-h-[50px]">
                       {columnTasks.length === 0 ? (
-                        <div
-                          className="border rounded bg-muted text-muted-foreground text-center py-4 px-2 text-sm select-none pointer-events-none"
-                        >
+                        <div className="border rounded bg-muted text-muted-foreground text-center py-4 px-2 text-sm select-none pointer-events-none">
                           No tasks
                         </div>
                       ) : (
@@ -272,8 +281,23 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
               )
             })}
           </div>
-
         </div>
+
+        <DragOverlay>
+          {activeId ? (() => {
+            const task = tasks.find((t) => t.id === activeId)
+            return task ? (
+              <SortableTaskCard
+                task={task}
+                teamId={teamId}
+                open={false}
+                onOpenChange={() => {}}
+                onSuccess={() => {}}
+                dragging
+              />
+            ) : null
+          })() : null}
+        </DragOverlay>
       </DndContext>
 
       <ColumnManagerDialog

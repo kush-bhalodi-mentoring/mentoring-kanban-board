@@ -10,6 +10,7 @@ type Props = {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess: () => void
+  dragging?: boolean
 }
 
 export default function SortableTaskCard(props: Props) {
@@ -30,7 +31,7 @@ export default function SortableTaskCard(props: Props) {
     <div
       ref={setNodeRef}
       style={style}
-      className="relative"
+      className={cn("your-card-styles", props.dragging && "opacity-50 scale-105 z-50")}
     >
       <TaskCard {...props}>
         <div
