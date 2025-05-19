@@ -46,23 +46,6 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
   const [tasks, setTasks] = useState<TaskProps[]>([])
   const [activeTask, setActiveTask] = useState<TaskProps | null>(null)
 
-  useEffect(() => {
-    const checkAdmin = async () => {
-      const { data: userData } = await supabase.auth.getUser()
-      const userId = userData?.user?.id
-      if (!userId) return
-
-      const { data, error } = await supabase
-        .from(TABLE.USER_TEAM)
-        .select("role")
-        .eq("user_id", userId)
-        .eq("team_id", teamId)
-        .single()
-    }
-
-    checkAdmin()
-  }, [teamId])
-
   const fetchColumns = useCallback(async () => {
     const { data, error } = await supabase
       .from(TABLE.COLUMNS)
