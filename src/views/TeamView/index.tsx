@@ -106,19 +106,20 @@ export default function TeamView({ teamId }: TeamViewProps) {
             )}
           </div>
         </div>
-
-        <div className="flex items-center gap-2">
-          <TeamSwitcher currentTeamId={teamId} />
-          <TeamToolbar
-            teamId={teamId}
-            initialName={team.name}
-            initialDescription={team.description}
-            onTeamUpdate={(newName, newDescription) =>
-              setTeam((prev) =>
-                prev ? { ...prev, name: newName, description: newDescription } : prev
-              )
-            }
-          />
+        <div className="overflow-x-auto scrollbar-hide">
+          <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap">
+            <TeamSwitcher currentTeamId={teamId} />
+            <TeamToolbar
+              teamId={teamId}
+              initialName={team.name}
+              initialDescription={team.description}
+              onTeamUpdate={(newName, newDescription) =>
+                setTeam((prev) =>
+                  prev ? { ...prev, name: newName, description: newDescription } : prev
+                )
+              }
+            />
+          </div>
         </div>
       </div>
 
