@@ -1,69 +1,100 @@
 import { NextResponse } from "next/server"
 import { supabaseAdmin } from "@/utils/supabase/admin"
-import { TeamMemberRoles, TeamMemberStatus } from "@/types/supabaseTableData";
+import { TeamMemberRoles, TeamMemberStatus } from "@/types/supabaseTableData"
+
+type APIError = {
+  message: string;
+  [key: string]: unknown;
+};
+
+const throwIfError = (error: APIError | Error, status: number = 500) => {
+  console.error(error);
+  return NextResponse.json(
+    { error: "message" in error ? error.message : "Unexpected error." },
+    { status }
+  );
+};
 
 export async function POST(request: Request) {
   try {
     const { email, teamId } = await request.json()
 
     const { data: users, error: userFetchError } = await supabaseAdmin
-      .rpc("get_user_id_by_email",{email});
+      .rpc("get_user_id_by_email", { email })
 
-    let userId: string;
+    if (userFetchError) return throwIfError(userFetchError)
 
-    if (userFetchError) {
-      console.error("Error fetching user:", userFetchError)
-      return NextResponse.json({ error: "Server error checking user." }, { status: 500 })
-    }
+    let userId: string | undefined
 
     if (users && users.length > 0) {
       userId = users[0].id
-    } else {
-      const { data: invitedUser, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email,
-        {redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/set-password?teamId=${teamId}`})
 
-      if (inviteError) {
-        console.error("Error inviting user:", inviteError)
-        return NextResponse.json({ error: inviteError.message }, { status: 400 })
+      const { data: existingMembership, error: membershipError } = await supabaseAdmin
+        .from("user_team")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("team_id", teamId)
+        .maybeSingle()
+
+      if (membershipError) return throwIfError(membershipError)
+
+      if (existingMembership) {
+        return throwIfError({ message: "User already in this team." }, 400)
       }
 
-      userId = invitedUser.user.id
+      const { data, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+        type: "magiclink",
+        email,
+        options: {
+          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/join-team?teamId=${teamId}`,
+        },
+      })
 
-      console.log("Invited User:", invitedUser)
+      if (linkError) return throwIfError(linkError)
+
+      const magicLink = data?.properties?.action_link
+
+      console.log("Generated magic link:", magicLink)
+
+      if (!magicLink) {
+        return throwIfError({ message: "Magic link not generated." })
+      }
+
+      const { error: insertError } = await supabaseAdmin.from("user_team").insert({
+        user_id: userId,
+        team_id: teamId,
+        role: TeamMemberRoles.USER,
+        status: TeamMemberStatus.AWAITING,
+      })
+
+      if (insertError) return throwIfError(insertError)
+
+      return NextResponse.json({ success: true, message: "Magic link sent to existing user." })
     }
 
-    const { data: existingMembership, error: membershipError } = await supabaseAdmin
-      .from("user_team")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("team_id", teamId)
-      .maybeSingle()
+    const { data: invitedUser, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/set-password?teamId=${teamId}`,
+    })
 
-    if (membershipError) {
-      console.error("Error checking user_team membership:", membershipError)
-      return NextResponse.json({ error: "Failed to check team membership." }, { status: 500 })
+    if (inviteError) return throwIfError(inviteError, 400)
+
+    userId = invitedUser.user.id
+
+    if (!userId) {
+      return throwIfError({ message: "User ID is undefined after invitation." })
     }
 
-    if (existingMembership) {
-      return NextResponse.json({ error: "User already in this team." }, { status: 400 })
-    }
-
-    const { error: insertError } = await supabaseAdmin.from("user_team").insert({
+    const { error: insertInviteError } = await supabaseAdmin.from("user_team").insert({
       user_id: userId,
       team_id: teamId,
       role: TeamMemberRoles.USER,
       status: TeamMemberStatus.AWAITING,
     })
 
-    if (insertError) {
-      console.error("Error inserting user_team record:", insertError)
-      return NextResponse.json({ error: "Failed to create team membership." }, { status: 500 })
-    }
+    if (insertInviteError) return throwIfError(insertInviteError)
 
-    return NextResponse.json({ success: true, message: "Invitation sent." })
-
+    return NextResponse.json({ success: true, message: "Invitation sent to new user." })
   } catch (error) {
-    console.error("Unexpected server error:", error)
-    return NextResponse.json({ error: "Unexpected server error." }, { status: 500 })
+    return throwIfError(error as Error)
   }
 }

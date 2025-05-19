@@ -66,7 +66,7 @@ export default function JoinTeamPage() {
     if (error) {
       console.error("Error joining team:", error)
     } else {
-      router.push(`${ROUTES.TEAM}/${selectedTeam}`)
+      router.push(ROUTES.TEAM_ID(selectedTeam))
     }
 
     setLoading(false)

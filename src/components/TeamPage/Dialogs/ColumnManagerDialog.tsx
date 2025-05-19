@@ -41,7 +41,6 @@ type Props = {
   onSuccess: () => void
 }
 
-// Sortable column with drag handle
 function SortableItem({
   column,
   index,
@@ -114,22 +113,48 @@ export default function ColumnManagerDialog({ boardId, open, onOpenChange, onSuc
       { id: uuidv4(), name: "In Progress", position: 1, boardId },
       { id: uuidv4(), name: "Done", position: 2, boardId },
     ]
-    const fetchColumns = async () => {
-      const { data } = await supabase
+
+    const fetchAndInitializeColumns = async () => {
+      const { data, error } = await supabase
         .from(TABLE.COLUMNS)
         .select("*")
         .eq("board_id", boardId)
         .order("position", { ascending: true })
 
+      if (error) {
+        toast.error("Failed to fetch columns")
+        return
+      }
+
       if (data && data.length > 0) {
         setColumns(data)
       } else {
+        // No columns exist — insert defaults into the database
+        const insertData = DEFAULT_COLUMNS.map((col, index) => ({
+          id: col.id,
+          name: col.name,
+          board_id: boardId,
+          position: index + 1,
+        }))
+
+        const { error: insertError } = await supabase
+          .from(TABLE.COLUMNS)
+          .insert(insertData)
+
+        if (insertError) {
+          toast.error("Failed to initialize default columns")
+          return
+        }
+
+        // Set the default columns to state after inserting
         setColumns(DEFAULT_COLUMNS)
+        toast.success("Default columns added")
       }
     }
 
-    if (open) fetchColumns()
+    if (open) fetchAndInitializeColumns()
   }, [open, boardId])
+
 
   const handleAdd = () => {
     setColumns((prev) => [

@@ -1,4 +1,4 @@
-import TeamView from "@/views/Team/TeamView";
+import TeamView from "@/views/TeamView";
 import { JSX } from "react";
 
 type PageProps = {

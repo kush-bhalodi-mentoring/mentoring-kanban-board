@@ -15,7 +15,6 @@ export default function SetPasswordView() {
   const router = useRouter();
 
   const teamId = searchParams.get("teamId");
-  const userId = searchParams.get("userId");
 
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -57,8 +56,10 @@ export default function SetPasswordView() {
 
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
+
+      const userId = user?.id;
       const email = user?.email;
-      if (!email) throw new Error("Email not found");
+      if (!email || !userId) throw new Error("User info not found");
 
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
@@ -68,6 +69,8 @@ export default function SetPasswordView() {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
       }
+
+      console.log("userId:", userId, "teamId:", teamId);
 
       if (userId && teamId) {
         const { error: statusUpdateError } = await supabase

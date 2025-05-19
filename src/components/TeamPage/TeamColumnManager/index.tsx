@@ -39,6 +39,7 @@ type ColumnProps = {
 
 type TaskType = "Bug" | "Feature" | "Story"
 
+
 export type TaskProps = {
   id: string
   title: string
@@ -61,6 +62,7 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
   const [tasks, setTasks] = useState<TaskProps[]>([])
   const [activeTask, setActiveTask] = useState<TaskProps | null>(null)
   const sensors = useSensors(useSensor(PointerSensor))
+
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -254,6 +256,7 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
               )
             })}
           </div>
+
         </div>
       </DndContext>
 

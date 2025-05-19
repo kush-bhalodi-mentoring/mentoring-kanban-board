@@ -1,44 +1,68 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { supabase } from "@/utils/supabase/client"
 import { DB_TABLE_NAMES as TABLE } from "@/constants/databaseTableNames"
-import TeamToolbar from '@/components/TeamPage/TeamToolbar'
+import TeamToolbar from "@/components/TeamPage/TeamToolbar"
 import { TeamSwitcher } from "@/components/TeamPage/TeamSwitch/TeamSwitcher"
-import TeamBoardManager from "@/components/TeamBoardManager";
+import TeamBoardManager from "@/components/TeamBoardManager"
+import { toast } from "sonner"
 import TeamColumnManager from "@/components/TeamPage/TeamColumnManager"
 
 type TeamViewProps = {
   teamId: string;
-};
+}
 
 type Team = {
   id: string;
   name: string;
   description: string;
-};
+}
 
 export default function TeamView({ teamId }: TeamViewProps) {
   const [team, setTeam] = useState<Team | null>(null)
   const [boardId, setBoardId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
-    const fetchTeamAndBoard = async () => {
-      // Fetch team
-      const { data: teamData, error: teamError } = await supabase
+    const fetchData = async () => {
+      const {
+        data: { user },
+        error: userError
+      } = await supabase.auth.getUser()
+
+      if (userError || !user) {
+        toast.error("Unable to find user session.")
+        router.replace("/")
+        return
+      }
+
+      const { data: userTeam, error: userTeamError } = await supabase
+        .from("user_team")
+        .select("status")
+        .eq("team_id", teamId)
+        .eq("user_id", user.id)
+        .maybeSingle()
+
+      if (userTeamError || !userTeam || userTeam.status !== "ACTIVE") {
+        toast.error("No access to this team.")
+        router.replace("/")
+        return
+      }
+
+      const { data, error } = await supabase
         .from(TABLE.TEAMS)
         .select("*")
         .eq("id", teamId)
         .single()
 
-      if (teamError) {
-        console.error("Failed to fetch team", teamError)
-        setLoading(false)
-        return
+      if (error) {
+        console.error("Failed to fetch team", error)
+      } else {
+        setTeam(data)
       }
-
-      setTeam(teamData)
 
       // Fetch board for the team
       const { data: boardData, error: boardError } = await supabase
@@ -55,9 +79,12 @@ export default function TeamView({ teamId }: TeamViewProps) {
 
       setLoading(false)
     }
+    fetchData()
+    
+  }, [teamId, router])
 
-    fetchTeamAndBoard()
-  }, [teamId])
+
+
 
   if (loading) return <div className="p-6">Loading...</div>
   if (!team) return <div className="p-6">Team not found.</div>
