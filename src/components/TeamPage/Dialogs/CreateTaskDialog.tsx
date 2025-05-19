@@ -69,7 +69,7 @@ export default function CreateTaskDialog({ open, onOpenChange, boardId, teamId, 
 
           <Select
             value={type}
-            onValueChange={(value) => setType(value as TaskType)} // cast safely here
+            onValueChange={(value) => setType(value as TaskType)}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select type" />
