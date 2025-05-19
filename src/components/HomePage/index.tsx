@@ -42,7 +42,7 @@ export default function HomePage({ user, teams, loading }: Props) {
         <CardHeader className="text-center space-y-2">
           <KanbanSquare className="mx-auto h-12 w-12 text-primary" />
           <CardTitle className="text-3xl font-bold">Welcome to our project</CardTitle>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground">
             Lightweight, collaborative Kanban Boards for teams.
           </p>
         </CardHeader>

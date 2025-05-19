@@ -100,7 +100,7 @@ export default function TeamView({ teamId }: TeamViewProps) {
             <span>{team.name}</span>
             {boardName && (
               <>
-                <span className="text-muted-foreground">/</span>
+                <span className="text-muted-foreground">&gt;</span>
                 <span className="text-muted-foreground">{boardName}</span>
               </>
             )}
