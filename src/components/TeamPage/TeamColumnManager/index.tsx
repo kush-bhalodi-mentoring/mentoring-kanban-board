@@ -25,6 +25,7 @@ import {
 } from "@dnd-kit/sortable"
 import SortableTaskCard from "../SortableTaskCard" 
 import DroppableColumn from "@/components/TeamPage/DroppableColumn"
+import { Columns } from "lucide-react"
 
 
 type TeamColumnManagerProps = {
@@ -211,7 +212,7 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
         </div>
 
         <div className="overflow-x-auto pt-2">
-          <div className="flex space-x-4 min-w-max">
+          <div className="flex space-x-8 min-w-max">
             {columns.map((column) => {
               const columnTasks = tasks
                 .filter((t) => t.column_id === column.id)
@@ -310,11 +311,12 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
 
       {activeTask && (
         <EditTaskDialog
-          teamId={teamId}
           task={activeTask}
           open={!!activeTask}
           onOpenChange={() => setActiveTask(null)}
           onSuccess={fetchTasks}
+          teamId={teamId}
+          boardId={boardId}
         />
       )}
     </div>

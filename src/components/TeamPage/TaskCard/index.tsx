@@ -18,7 +18,7 @@ type Props = {
     position: number
     estimation?: number
     created_by: string
-    created_by_email?: string | null
+    column_id: string 
   }
   open: boolean
   onOpenChange: (open: boolean) => void
