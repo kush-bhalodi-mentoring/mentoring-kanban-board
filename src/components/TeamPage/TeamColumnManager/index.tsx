@@ -24,6 +24,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import SortableTaskCard from "../SortableTaskCard" 
+import DroppableColumn from "@/components/TeamPage/DroppableColumn"
 
 
 type TeamColumnManagerProps = {
@@ -131,19 +132,24 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
+    setActiveId(null)
+
     if (!over || active.id === over.id) return
 
-    const activeTask = tasks.find((task) => task.id === active.id)
-    const overTask = tasks.find((task) => task.id === over.id)
-    if (!activeTask || !overTask) return
+    const activeTask = tasks.find((t) => t.id === active.id)
+    if (!activeTask) return
 
-    const isSameColumn = activeTask.column_id === overTask.column_id
-    const newColumnId = overTask.column_id
+    // If over is a column (drop on empty column), find the column directly
+    const overTask = tasks.find((t) => t.id === over.id)
+    const targetColumnId = overTask?.column_id || (columns.find(col => col.id === over.id)?.id)
+
+    if (!targetColumnId) return
+
+    const isSameColumn = activeTask.column_id === targetColumnId
 
     let updatedTasks: TaskProps[] = []
 
     if (isSameColumn) {
-      // Get tasks in the same column
       const columnTasks = tasks
         .filter((t) => t.column_id === activeTask.column_id)
         .sort((a, b) => a.position - b.position)
@@ -151,32 +157,36 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
       const oldIndex = columnTasks.findIndex((t) => t.id === active.id)
       const newIndex = columnTasks.findIndex((t) => t.id === over.id)
 
+      if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return
+
       const reordered = arrayMove(columnTasks, oldIndex, newIndex).map((t, idx) => ({
         ...t,
         position: idx,
       }))
 
-      // Update full task list
-      updatedTasks = tasks.map((t) => {
-        if (t.column_id !== activeTask.column_id) return t
-        return reordered.find((rt) => rt.id === t.id) || t
-      })
-
+      updatedTasks = tasks.map((t) =>
+        t.column_id === activeTask.column_id
+          ? reordered.find((rt) => rt.id === t.id) || t
+          : t
+      )
     } else {
-      // Moving to another column
+      // Remove from source
       const sourceTasks = tasks
-        .filter((t) => t.column_id === activeTask.column_id && t.id !== activeTask.id)
+        .filter((t) => t.column_id === activeTask.column_id && t.id !== active.id)
         .sort((a, b) => a.position - b.position)
 
+      // Insert into destination
       const destTasks = tasks
-        .filter((t) => t.column_id === overTask.column_id)
+        .filter((t) => t.column_id === targetColumnId)
         .sort((a, b) => a.position - b.position)
 
-      const insertIndex = destTasks.findIndex((t) => t.id === over.id)
+      const insertIndex = overTask
+        ? destTasks.findIndex((t) => t.id === overTask.id)
+        : destTasks.length
 
       const newDestTasks = [
         ...destTasks.slice(0, insertIndex),
-        { ...activeTask, column_id: newColumnId },
+        { ...activeTask, column_id: targetColumnId },
         ...destTasks.slice(insertIndex),
       ]
 
@@ -185,7 +195,7 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
 
       updatedTasks = [
         ...tasks.filter(
-          (t) => t.column_id !== activeTask.column_id && t.column_id !== newColumnId
+          (t) => t.column_id !== activeTask.column_id && t.column_id !== targetColumnId
         ),
         ...updatedSource,
         ...updatedDest,
@@ -232,52 +242,54 @@ export default function TeamColumnManager({ teamId, boardId }: TeamColumnManager
                 .sort((a, b) => a.position - b.position)
 
               return (
-                <div
-                  key={column.id}
-                  className="w-[300px] min-h-screen bg-white rounded shadow p-4 flex flex-col"
-                >
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-sm font-semibold">{column.name}</h3>
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      onClick={() => handleOpenCreateTask(column.id)}
-                    >
-                      +
-                    </Button>
-                  </div>
-
-                  <SortableContext
-                    items={columnTasks.map((task) => task.id)}
-                    strategy={verticalListSortingStrategy}
+                <DroppableColumn key={column.id} columnId={column.id}>
+                  <div
+                    key={column.id}
+                    className="w-[300px] min-h-screen bg-white rounded shadow p-4 flex flex-col"
                   >
-                    <div className="flex flex-col space-y-4 min-h-[50px]">
-                      {columnTasks.length === 0 ? (
-                        <div className="border rounded bg-muted text-muted-foreground text-center py-4 px-2 text-sm select-none pointer-events-none">
-                          No tasks
-                        </div>
-                      ) : (
-                        columnTasks.map((task) => (
-                          <div id={task.id} key={task.id}>
-                            <SortableTaskCard
-                              task={task}
-                              teamId={teamId}
-                              open={!!activeTask && activeTask.id === task.id}
-                              onOpenChange={(open) => {
-                                if (open) {
-                                  setActiveTask(task)
-                                } else {
-                                  setActiveTask(null)
-                                }
-                              }}
-                              onSuccess={fetchTasks}
-                            />
-                          </div>
-                        ))
-                      )}
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="text-sm font-semibold">{column.name}</h3>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => handleOpenCreateTask(column.id)}
+                      >
+                        +
+                      </Button>
                     </div>
-                  </SortableContext>
-                </div>
+
+                    <SortableContext
+                      items={columnTasks.map((task) => task.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="flex flex-col space-y-4 min-h-[50px]">
+                        {columnTasks.length === 0 ? (
+                          <div className="border rounded bg-muted text-muted-foreground text-center py-4 px-2 text-sm select-none pointer-events-none">
+                            No tasks
+                          </div>
+                        ) : (
+                          columnTasks.map((task) => (
+                            <div id={task.id} key={task.id}>
+                              <SortableTaskCard
+                                task={task}
+                                teamId={teamId}
+                                open={!!activeTask && activeTask.id === task.id}
+                                onOpenChange={(open) => {
+                                  if (open) {
+                                    setActiveTask(task)
+                                  } else {
+                                    setActiveTask(null)
+                                  }
+                                }}
+                                onSuccess={fetchTasks}
+                              />
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </SortableContext>
+                  </div>
+                </DroppableColumn>
               )
             })}
           </div>
