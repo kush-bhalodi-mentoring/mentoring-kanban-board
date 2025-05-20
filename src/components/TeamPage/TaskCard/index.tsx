@@ -87,17 +87,25 @@ export default function TaskCard({
         )}
       </div>
 
-      <div className="flex gap-2 flex-wrap">
-        <Badge
-          variant="outline"
-          className={cn(
-            "text-xs px-2 py-0.5 rounded-full border",
-            typeStyleMap[task.type]
-          )}
-        >
-          {task.type}
-        </Badge>
+      <div className="flex flex-col gap-1">
+        <div className="flex gap-2 flex-wrap">
+          <Badge
+            variant="outline"
+            className={cn(
+              "text-xs px-2 py-0.5 rounded-full border",
+              typeStyleMap[task.type]
+            )}
+          >
+            {task.type}
+          </Badge>
+        </div>
+        {task.due_date && (
+          <span className="text-xs text-muted-foreground ml-0.5">
+            Due: {new Date(task.due_date).toLocaleDateString()}
+          </span>
+        )}
       </div>
+
 
       <div className="flex justify-end">
         {createdByEmail && (
