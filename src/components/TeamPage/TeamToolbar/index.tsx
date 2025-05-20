@@ -1,18 +1,23 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Settings } from "lucide-react"
+import { Settings, Users, UserPlus, Columns } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { supabase } from "@/utils/supabase/client"
 import { DB_TABLE_NAMES as TABLE } from "@/constants/databaseTableNames"
 import EditTeamDialog from "@/components/TeamPage/Dialogs/EditTeamDialog"
 import EditTeamMembersDialog from "@/components/TeamPage/Dialogs/EditTeamMembersDialog"
-import InviteUserDialog from "@/components/TeamPage/Dialogs/InviteUserDialog";
+import InviteUserDialog from "@/components/TeamPage/Dialogs/InviteUserDialog"
+import ColumnManagerDialog from "@/components/TeamPage/Dialogs/ColumnManagerDialog"
 
 type TeamToolbarProps = {
   teamId: string
   initialName: string
   initialDescription: string
+  boardId: string | null
+  columnDialogOpen: boolean
+  setColumnDialogOpen: (open: boolean) => void
+  onColumnsUpdate: () => void
   onTeamUpdate?: (newName: string, newDescription: string) => void
 }
 
@@ -25,6 +30,10 @@ export default function TeamToolbar({
   teamId,
   initialName,
   initialDescription,
+  boardId,
+  columnDialogOpen,
+  setColumnDialogOpen,
+  onColumnsUpdate,
   onTeamUpdate,
 }: TeamToolbarProps) {
   const [isAdmin, setIsAdmin] = useState(false)
@@ -96,7 +105,7 @@ export default function TeamToolbar({
     <>
       <Button
         variant="ghost"
-        className="py-[2px] px-[4px] text-sm font-semibold text-muted-foreground flex items-center"
+        className="py-[2px] px-[4px] text-sm font-semibold text-muted-foreground flex items-center gap-1"
         onClick={toggleEditTeamDialog}
       >
         <Settings className="w-4 h-4" />
@@ -105,20 +114,30 @@ export default function TeamToolbar({
 
       <Button
         variant="ghost"
-        className="py-[2px] px-[4px] text-sm font-semibold text-muted-foreground flex items-center"
+        className="py-[2px] px-[4px] text-sm font-semibold text-muted-foreground flex items-center gap-1"
         onClick={toggleEditMembersDialog}
       >
-        <Settings className="w-4 h-4" />
+        <Users className="w-4 h-4" />
         Team Members
       </Button>
 
       <Button
         variant="ghost"
-        className="py-[2px] px-[4px] text-sm font-semibold text-muted-foreground flex items-center"
+        className="py-[2px] px-[4px] text-sm font-semibold text-muted-foreground flex items-center gap-1"
         onClick={toggleInviteUserDialog}
       >
-        <Settings className="w-4 h-4" />
+        <UserPlus className="w-4 h-4" />
         Invite User
+      </Button>
+
+      <Button
+        variant="ghost"
+        className="py-[2px] px-[4px] text-sm font-semibold text-muted-foreground flex items-center gap-1"
+        onClick={() => setColumnDialogOpen(true)}
+        disabled={!boardId}
+      >
+        <Columns className="w-4 h-4" />
+        Manage Columns
       </Button>
 
       <EditTeamDialog
@@ -135,10 +154,23 @@ export default function TeamToolbar({
         open={editMembersOpen}
         onOpenChange={setEditMembersOpen}
       />
+
       <InviteUserDialog
         open={inviteUserOpen}
         onOpenChange={setInviteUserOpen}
       />
+
+      {boardId && (
+        <ColumnManagerDialog
+          boardId={boardId}
+          open={columnDialogOpen}
+          onOpenChange={setColumnDialogOpen}
+          onSuccess={() => {
+            onColumnsUpdate()
+            setColumnDialogOpen(false)
+          }}
+        />
+      )}
     </>
   )
 }
