@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     }
 
     const { data: invitedUser, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/set-password?teamId=${teamId}`,
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}set-password?teamId=${teamId}`,
     })
 
     if (inviteError) return throwIfError(inviteError, 400)
